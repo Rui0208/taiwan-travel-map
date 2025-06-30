@@ -8,12 +8,60 @@ import useSWR from "swr";
 
 import { endpoints } from "@/api/endpoints";
 import { fetcher } from "@/api/fetcher";
-import { type VisitedPlace, type ApiResponse, COUNTY_NAMES } from "@/api/types";
+import { type VisitedPlace, type ApiResponse } from "@/api/types";
 import { slugToCounty } from "@/lib/utils";
 import SocialCountyView from "@/components/SocialCountyView";
 import EditVisitModal from "@/components/EditVisitModal";
 import AddVisitModal from "@/components/AddVisitModal";
 import LoginModal from "@/components/LoginModal";
+
+// 資料庫縣市名稱對應表（支援舊格式和新格式）
+const DB_COUNTY_MAP: Record<string, string> = {
+  // 舊格式
+  "Taipei City": "臺北",
+  "New Taipei City": "新北",
+  "Taoyuan City": "桃園",
+  "Taichung City": "臺中",
+  "Tainan City": "臺南",
+  "Kaohsiung City": "高雄",
+  "Keelung City": "基隆",
+  "Hsinchu City": "新竹",
+  "Chiayi City": "嘉義",
+  "Hsinchu County": "新竹",
+  "Miaoli County": "苗栗",
+  "Changhua County": "彰化",
+  "Nantou County": "南投",
+  "Yunlin County": "雲林",
+  "Chiayi County": "嘉義",
+  "Pingtung County": "屏東",
+  "Yilan County": "宜蘭",
+  "Hualien County": "花蓮",
+  "Taitung County": "臺東",
+  "Penghu County": "澎湖",
+  "Kinmen County": "金門",
+  "Lienchiang County": "連江",
+  // 新格式（已經是中文）
+  "臺北": "臺北",
+  "新北": "新北",
+  "桃園": "桃園",
+  "臺中": "臺中",
+  "臺南": "臺南",
+  "高雄": "高雄",
+  "基隆": "基隆",
+  "新竹": "新竹",
+  "嘉義": "嘉義",
+  "苗栗": "苗栗",
+  "彰化": "彰化",
+  "南投": "南投",
+  "雲林": "雲林",
+  "屏東": "屏東",
+  "宜蘭": "宜蘭",
+  "花蓮": "花蓮",
+  "臺東": "臺東",
+  "澎湖": "澎湖",
+  "金門": "金門",
+  "連江": "連江",
+};
 
 export default function CountyPage() {
   const { data: session, status } = useSession();
@@ -45,15 +93,15 @@ export default function CountyPage() {
       return endpoints.posts.byCounty(countyName);
     } else if (status === "authenticated") {
       if (showOnlyMine) {
-        // mine 模式：使用visited API來獲取自己的資料
-        return endpoints.visited.list;
+        // mine 模式：使用posts API來獲取當前用戶的文章
+        return endpoints.posts.byUser(session?.user?.id);
       } else {
         // 所有人模式：使用posts API來獲取所有公開文章
         return endpoints.posts.byCounty(countyName);
       }
     }
     return null; // loading 狀態
-  }, [status, countyName, showOnlyMine]);
+  }, [status, countyName, showOnlyMine, session?.user?.id]);
 
   // 使用 SWR 獲取造訪資料
   const { data: visitedData, mutate } = useSWR<ApiResponse<VisitedPlace[]>>(
@@ -70,21 +118,20 @@ export default function CountyPage() {
       return visitedData.data;
     } else {
       // mine 模式：需要篩選當前縣市的資料
-      const englishCountyName = COUNTY_NAMES[countyName as keyof typeof COUNTY_NAMES];
-
+      // 現在資料庫使用中文縣市名稱（如：臺北、新北）
       console.log("Filtering counties in mine mode:", {
         countyName,
-        englishCountyName,
         totalRecords: visitedData.data.length,
         showOnlyMine,
         viewMode,
         allCounties: visitedData.data.map(item => item.county),
       });
 
-      // 篩選出當前縣市的資料
+      // 篩選出當前縣市的資料（使用對應表來處理舊格式和新格式）
       const filteredData = visitedData.data.filter((item) => {
-        const matches = item.county === englishCountyName;
-        console.log(`Item ${item.id}: county=${item.county}, matches=${matches}`);
+        const dbCountyName = DB_COUNTY_MAP[item.county] || item.county;
+        const matches = dbCountyName === countyName;
+        console.log(`Item ${item.id}: county=${item.county}, mapped=${dbCountyName}, target=${countyName}, matches=${matches}`);
         return matches;
       });
 

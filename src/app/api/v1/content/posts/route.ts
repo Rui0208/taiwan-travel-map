@@ -1,12 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { auth } from "@/auth";
-import { COUNTY_NAMES } from "@/api/types";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+// 資料庫縣市名稱對應表（支援舊格式和新格式）
+const DB_COUNTY_MAP: Record<string, string> = {
+  // 舊格式
+  "Taipei City": "臺北",
+  "New Taipei City": "新北",
+  "Taoyuan City": "桃園",
+  "Taichung City": "臺中",
+  "Tainan City": "臺南",
+  "Kaohsiung City": "高雄",
+  "Keelung City": "基隆",
+  "Hsinchu City": "新竹",
+  "Chiayi City": "嘉義",
+  "Hsinchu County": "新竹",
+  "Miaoli County": "苗栗",
+  "Changhua County": "彰化",
+  "Nantou County": "南投",
+  "Yunlin County": "雲林",
+  "Chiayi County": "嘉義",
+  "Pingtung County": "屏東",
+  "Yilan County": "宜蘭",
+  "Hualien County": "花蓮",
+  "Taitung County": "臺東",
+  "Penghu County": "澎湖",
+  "Kinmen County": "金門",
+  "Lienchiang County": "連江",
+  // 新格式（已經是中文）
+  "臺北": "臺北",
+  "新北": "新北",
+  "桃園": "桃園",
+  "臺中": "臺中",
+  "臺南": "臺南",
+  "高雄": "高雄",
+  "基隆": "基隆",
+  "新竹": "新竹",
+  "嘉義": "嘉義",
+  "苗栗": "苗栗",
+  "彰化": "彰化",
+  "南投": "南投",
+  "雲林": "雲林",
+  "屏東": "屏東",
+  "宜蘭": "宜蘭",
+  "花蓮": "花蓮",
+  "臺東": "臺東",
+  "澎湖": "澎湖",
+  "金門": "金門",
+  "連江": "連江",
+};
 
 // GET /api/posts - 獲取帶有社交資料的文章列表
 export async function GET(request: NextRequest) {
@@ -35,13 +82,18 @@ export async function GET(request: NextRequest) {
       query = query.or(`is_public.eq.true,user_id.eq.${session!.user!.id}`);
     }
 
-    // 如果有指定縣市，則篩選（需要轉換為英文縣市名稱）
+    // 如果有指定縣市，則篩選（使用對應表來處理舊格式和新格式）
     if (county) {
-      const englishCountyName = COUNTY_NAMES[county as keyof typeof COUNTY_NAMES];
-      if (englishCountyName) {
-        query = query.eq("county", englishCountyName);
+      // 找到對應的資料庫縣市名稱
+      const dbCountyNames = Object.entries(DB_COUNTY_MAP)
+        .filter(([, mappedName]) => mappedName === county)
+        .map(([dbName]) => dbName);
+      
+      if (dbCountyNames.length > 0) {
+        // 使用 OR 查詢來匹配所有可能的資料庫縣市名稱
+        query = query.in("county", dbCountyNames);
       } else {
-        // 如果傳入的已經是英文名稱，直接使用
+        // 如果沒有找到對應，直接使用傳入的縣市名稱
         query = query.eq("county", county);
       }
     }

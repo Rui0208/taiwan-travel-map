@@ -8,7 +8,7 @@ export const endpoints = {
   posts: {
     list: "/api/v1/content/posts",
     byCounty: (county: string) => `/api/v1/content/posts?county=${encodeURIComponent(county)}`,
-    byUser: "/api/v1/content/posts",
+    byUser: (userId?: string) => userId ? `/api/v1/content/posts?userId=${encodeURIComponent(userId)}` : "/api/v1/content/posts",
     byId: (id: string) => `/api/v1/content/posts/${id}`,
   },
   likes: {

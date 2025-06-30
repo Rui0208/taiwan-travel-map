@@ -35,9 +35,7 @@ export default function UserPostsPage() {
       setLoading(true);
       setError(null);
 
-      const url = targetUserId 
-        ? `${endpoints.posts.byUser}?userId=${encodeURIComponent(targetUserId)}`
-        : endpoints.posts.list;
+      const url = endpoints.posts.byUser(targetUserId);
       
       const response = await fetch(url);
       const result = await response.json();

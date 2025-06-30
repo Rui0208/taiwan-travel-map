@@ -13,10 +13,123 @@ import { fetcher } from "@/api/fetcher";
 import {
   type VisitedPlace,
   type ApiResponse,
-  COUNTY_NAMES_REVERSE,
 } from "@/api/types";
 import { countyToSlug } from "@/lib/utils";
 import MapViewToggle from "./MapViewToggle";
+
+// SVG 地圖英文名稱對應到資料庫中文名稱的對照表
+const SVG_TO_DB_COUNTY_MAP: Record<string, string> = {
+  "Taipei City": "臺北",
+  "Taipei": "臺北",
+  "New Taipei City": "新北",
+  "New Taipei": "新北",
+  "Taoyuan City": "桃園",
+  "Taoyuan": "桃園",
+  "Taichung City": "臺中",
+  "Taichung": "臺中",
+  "Tainan City": "臺南",
+  "Tainan": "臺南",
+  "Kaohsiung City": "高雄",
+  "Kaohsiung": "高雄",
+  "Keelung City": "基隆",
+  "Keelung": "基隆",
+  "Hsinchu City": "新竹",
+  "Hsinchu County": "新竹",
+  "Hsinchu": "新竹",
+  "Chiayi City": "嘉義",
+  "Chiayi County": "嘉義",
+  "Chiayi": "嘉義",
+  "Miaoli County": "苗栗",
+  "Miaoli": "苗栗",
+  "Changhua County": "彰化",
+  "Changhua": "彰化",
+  "Nantou County": "南投",
+  "Nantou": "南投",
+  "Yunlin County": "雲林",
+  "Yunlin": "雲林",
+  "Pingtung County": "屏東",
+  "Pingtung": "屏東",
+  "Yilan County": "宜蘭",
+  "Yilan": "宜蘭",
+  "Hualien County": "花蓮",
+  "Hualien": "花蓮",
+  "Taitung County": "臺東",
+  "Taitung": "臺東",
+  "Penghu County": "澎湖",
+  "Penghu": "澎湖",
+  "Kinmen County": "金門",
+  "Kinmen": "金門",
+  "Lienchiang County": "連江",
+  "Lienchiang": "連江",
+};
+
+// 資料庫縣市名稱對應表（支援舊格式和新格式）
+const DB_COUNTY_MAP: Record<string, string> = {
+  // 舊格式
+  "Taipei City": "臺北",
+  "Taipei": "臺北",
+  "New Taipei City": "新北",
+  "New Taipei": "新北",
+  "Taoyuan City": "桃園",
+  "Taoyuan": "桃園",
+  "Taichung City": "臺中",
+  "Taichung": "臺中",
+  "Tainan City": "臺南",
+  "Tainan": "臺南",
+  "Kaohsiung City": "高雄",
+  "Kaohsiung": "高雄",
+  "Keelung City": "基隆",
+  "Keelung": "基隆",
+  "Hsinchu City": "新竹",
+  "Hsinchu County": "新竹",
+  "Hsinchu": "新竹",
+  "Chiayi City": "嘉義",
+  "Chiayi County": "嘉義",
+  "Chiayi": "嘉義",
+  "Miaoli County": "苗栗",
+  "Miaoli": "苗栗",
+  "Changhua County": "彰化",
+  "Changhua": "彰化",
+  "Nantou County": "南投",
+  "Nantou": "南投",
+  "Yunlin County": "雲林",
+  "Yunlin": "雲林",
+  "Pingtung County": "屏東",
+  "Pingtung": "屏東",
+  "Yilan County": "宜蘭",
+  "Yilan": "宜蘭",
+  "Hualien County": "花蓮",
+  "Hualien": "花蓮",
+  "Taitung County": "臺東",
+  "Taitung": "臺東",
+  "Penghu County": "澎湖",
+  "Penghu": "澎湖",
+  "Kinmen County": "金門",
+  "Kinmen": "金門",
+  "Lienchiang County": "連江",
+  "Lienchiang": "連江",
+  // 新格式（已經是中文）
+  "臺北": "臺北",
+  "新北": "新北",
+  "桃園": "桃園",
+  "臺中": "臺中",
+  "臺南": "臺南",
+  "高雄": "高雄",
+  "基隆": "基隆",
+  "新竹": "新竹",
+  "嘉義": "嘉義",
+  "苗栗": "苗栗",
+  "彰化": "彰化",
+  "南投": "南投",
+  "雲林": "雲林",
+  "屏東": "屏東",
+  "宜蘭": "宜蘭",
+  "花蓮": "花蓮",
+  "臺東": "臺東",
+  "澎湖": "澎湖",
+  "金門": "金門",
+  "連江": "連江",
+};
 
 interface TaiwanMapProps {
   onDataChange?: () => void;
@@ -51,39 +164,47 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
       return endpoints.posts.list;
     } else if (status === "authenticated") {
       if (showOnlyMine) {
-        return endpoints.visited.list; // 預設獲取自己的
+        // mine 模式：使用 posts API 的 byUser 端點，與縣市詳情頁面一致
+        return endpoints.posts.byUser(session?.user?.id);
       } else {
         return endpoints.posts.list; // 獲取所有人的
       }
     }
     return null; // loading 狀態
-  }, [status, showOnlyMine]);
+  }, [status, showOnlyMine, session?.user?.id]);
 
   const { data, error, isLoading } = useSWR<ApiResponse<VisitedPlace[]>>(
     apiEndpoint,
     fetcher
   );
 
-  // 調試 mine 模式的資料載入問題
+  // 調試資料載入問題
   useEffect(() => {
-    if (showOnlyMine) {
-      console.log("Mine mode debug:", {
-        apiEndpoint,
-        status,
-        sessionUser: session?.user,
-        data: data?.data,
-        error,
-        isLoading,
-      });
-    }
-  }, [showOnlyMine, apiEndpoint, status, session, data, error, isLoading]);
+    console.log("TaiwanMap debug:", {
+      apiEndpoint,
+      status,
+      sessionUser: session?.user,
+      dataCount: data?.data?.length || 0,
+      data: data?.data?.slice(0, 3), // 只顯示前3筆資料
+      error,
+      isLoading,
+      showOnlyMine,
+    });
+  }, [apiEndpoint, status, session, data, error, isLoading, showOnlyMine]);
 
-  // 計算當前懸停縣市的遊記數量 - SVG 地圖返回的是英文名稱，需要直接使用
+  // 計算當前懸停縣市的遊記數量 - SVG 地圖返回的是英文名稱，需要轉換為中文
   const hoveredCountyCount = useMemo(() => {
     if (!data?.data || !hoveredLocation) return 0;
 
-    // hoveredLocation 已經是英文名稱，直接使用
-    return data.data.filter((item) => item.county === hoveredLocation).length;
+    // hoveredLocation 是英文名稱，需要轉換為中文來匹配資料庫
+    const chineseCountyName = SVG_TO_DB_COUNTY_MAP[hoveredLocation];
+    if (!chineseCountyName) return 0;
+
+    // 使用新的對應表來匹配資料庫中的縣市名稱（支援舊格式和新格式）
+    return data.data.filter((item) => {
+      const dbCountyName = DB_COUNTY_MAP[item.county] || item.county;
+      return dbCountyName === chineseCountyName;
+    }).length;
   }, [data?.data, hoveredLocation]);
 
   useEffect(() => {
@@ -125,18 +246,23 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
         y: event.clientY,
       });
 
-      // 生成隨機擴散的圖片位置
-      if (data?.data) {
-        // location 已經是英文名稱，直接使用來匹配資料庫中的格式
-        const photosWithImages = data.data
-          .filter((item) => item.county === location && item.image_url)
-          .map((visit) => {
-            const urls = Array.isArray(visit.image_url)
-              ? visit.image_url
-              : [visit.image_url];
-            return urls;
-          })
-          .flat();
+              // 生成隨機擴散的圖片位置
+        if (data?.data) {
+          // location 是英文名稱，需要轉換為中文來匹配資料庫
+          const chineseCountyName = SVG_TO_DB_COUNTY_MAP[location];
+          const photosWithImages = data.data
+            .filter((item) => {
+              if (!chineseCountyName || !item.image_url) return false;
+              const dbCountyName = DB_COUNTY_MAP[item.county] || item.county;
+              return dbCountyName === chineseCountyName;
+            })
+            .map((visit) => {
+              const urls = Array.isArray(visit.image_url)
+                ? visit.image_url
+                : [visit.image_url];
+              return urls;
+            })
+            .flat();
 
         const animatedPhotoData: Array<{
           url: string;
@@ -201,7 +327,7 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
     const location = event.currentTarget.getAttribute("name");
     if (location) {
       // location 是英文名稱，需要轉換為中文再轉換為 slug
-      const chineseCountyName = COUNTY_NAMES_REVERSE[location];
+      const chineseCountyName = SVG_TO_DB_COUNTY_MAP[location];
       if (chineseCountyName) {
         const slug = countyToSlug(chineseCountyName);
         // 根據當前模式決定要導向的 URL
@@ -260,10 +386,12 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
                 className={
                   "stroke-[#4a5568] stroke-[1px] transition-all duration-300 ease-in-out cursor-pointer " +
                   (() => {
-                    // location.name 已經是英文名稱，直接使用來匹配資料庫中的格式
-                    const hasVisits = data?.data?.some(
-                      (item) => item.county === location.name
-                    );
+                    // location.name 是英文名稱，需要轉換為中文來匹配資料庫
+                    const chineseCountyName = SVG_TO_DB_COUNTY_MAP[location.name];
+                    const hasVisits = chineseCountyName && data?.data?.some((item) => {
+                      const dbCountyName = DB_COUNTY_MAP[item.county] || item.county;
+                      return dbCountyName === chineseCountyName;
+                    });
 
                     return hasVisits
                       ? "fill-[#aaaaaa] hover:fill-[#555555]"
@@ -330,10 +458,12 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
           }}
         >
           <div className="text-white font-medium text-center drop-shadow-lg">
-            {t(
-              `countiesArray.${COUNTY_NAMES_REVERSE[hoveredLocation]}`,
-              COUNTY_NAMES_REVERSE[hoveredLocation] || hoveredLocation
-            )}
+            {(() => {
+              const chineseCountyName = SVG_TO_DB_COUNTY_MAP[hoveredLocation];
+              return chineseCountyName 
+                ? t(`countiesArray.${chineseCountyName}`, chineseCountyName)
+                : hoveredLocation;
+            })()}
           </div>
           <div className="text-gray-300 text-sm text-center mt-1 drop-shadow-lg">
             {t("posts_count", { count: hoveredCountyCount })}

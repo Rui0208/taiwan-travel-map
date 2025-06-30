@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
-import { type VisitedPlace, type PostWithDetails, COUNTY_NAMES } from "@/api/types";
+import { type VisitedPlace, type PostWithDetails, COUNTY_NAMES, COUNTY_NAMES_REVERSE } from "@/api/types";
 import { endpoints } from "@/api/endpoints";
 import { fetcher } from "@/api/fetcher";
 import SocialPostCard from "./SocialPostCard";
@@ -49,7 +49,7 @@ export default function SocialCountyView({
   // 使用新的 posts API 獲取帶有社交資料的文章
   // 只有在已登入模式下才調用API，訪客模式的資料已經從縣市頁面傳入
   const { data: postsData, mutate: mutatePosts, error: postsError } = useSWR<{ data: PostWithDetails[] }>(
-    !isGuest ? (showOnlyMine ? endpoints.visited.list : endpoints.posts.byCounty(countyName)) : null,
+    !isGuest ? (showOnlyMine ? endpoints.posts.byUser(currentUserId) : endpoints.posts.byCounty(countyName)) : null,
     fetcher
   );
 
@@ -66,13 +66,49 @@ export default function SocialCountyView({
     // 已登入模式：優先使用API資料，否則使用傳入資料
     if (postsData?.data) {
       if (showOnlyMine) {
-        // mine 模式：需要篩選當前縣市的資料
-        const englishCountyName = COUNTY_NAMES[countyName as keyof typeof COUNTY_NAMES];
-        return postsData.data.filter((item) => item.county === englishCountyName);
+        // mine 模式：API 已經返回當前用戶的所有文章，需要篩選當前縣市
+        // 產生所有可能的英文名稱（含舊格式）
+        const allPossibleEnglishNames = Object.entries(COUNTY_NAMES)
+          .filter(([zh]) => zh === countyName)
+          .map(([, en]) => en as string)
+          .concat(
+            Object.keys(COUNTY_NAMES_REVERSE).filter(
+              en => COUNTY_NAMES_REVERSE[en] === countyName
+            )
+          );
+        // 加入常見舊格式（如 "Taitung County"）
+        const legacyEnglish = allPossibleEnglishNames.map(name => name + " County");
+        const allNames: string[] = [
+          ...allPossibleEnglishNames,
+          ...legacyEnglish,
+          countyName,
+          displayCountyName,
+        ];
+        
+        console.log("Mine mode filtering:", {
+          countyName,
+          allNames,
+          totalPosts: postsData.data.length,
+          allCounties: postsData.data.map(p => p.county),
+        });
+        
+        const filteredData = postsData.data.filter((item) => {
+          const matches = allNames.includes(item.county);
+          console.log(`Item ${item.id}: county=${item.county}, matches=${matches}`);
+          return matches;
+        });
+        
+        console.log("Filtered data count:", filteredData.length);
+        return filteredData;
       } else {
         // 所有人模式：posts API已經按縣市篩選，直接返回
         return postsData.data;
       }
+    }
+    
+    // 如果有錯誤，回退到原始資料
+    if (postsError) {
+      console.warn("API 錯誤，回退到原始資料:", postsError);
     }
     
     // 回退到原始資料（加上預設社交資料）
@@ -280,9 +316,12 @@ export default function SocialCountyView({
     postsDataExists: !!postsData,
     postsDataLength: postsData?.data?.length || 0,
     postsWithSocialDataLength: postsWithSocialData.length,
-    apiEndpoint: endpoints.posts.byCounty(countyName),
+    apiEndpoint: showOnlyMine ? endpoints.posts.byUser(currentUserId) : endpoints.posts.byCounty(countyName),
     postsData: postsData,
     postsWithSocialData: postsWithSocialData,
+    showOnlyMine,
+    isGuest,
+    currentUserId,
   });
 
   return (
@@ -400,14 +439,7 @@ export default function SocialCountyView({
               <h3 className="text-xl font-semibold text-white mb-2">
                 {t("no_visits_yet")}
               </h3>
-              <p className="text-gray-400 mb-6 max-w-sm">
-                {isGuest ? 
-                  `目前沒有人在${displayCountyName}分享公開的旅遊記錄` : 
-                  showOnlyMine ?
-                    `你還沒有在${displayCountyName}留下足跡` :
-                    `開始記錄你在${displayCountyName}的美好回憶吧！`
-                }
-              </p>
+          
               {!isGuest && (
                 <button
                   onClick={onAdd}

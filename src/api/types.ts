@@ -89,30 +89,28 @@ export interface ApiResponse<T> {
   error: string | null;
 }
 
-// 縣市名稱對照表
+// 縣市名稱對照表 - 統一簡潔格式
 export const COUNTY_NAMES = {
-  臺北市: "Taipei City",
-  新北市: "New Taipei City",
-  桃園市: "Taoyuan City",
-  臺中市: "Taichung City",
-  臺南市: "Tainan City",
-  高雄市: "Kaohsiung City",
-  基隆市: "Keelung City",
-  新竹市: "Hsinchu City",
-  嘉義市: "Chiayi City",
-  新竹縣: "Hsinchu County",
-  苗栗縣: "Miaoli County",
-  彰化縣: "Changhua County",
-  南投縣: "Nantou County",
-  雲林縣: "Yunlin County",
-  嘉義縣: "Chiayi County",
-  屏東縣: "Pingtung County",
-  宜蘭縣: "Yilan County",
-  花蓮縣: "Hualien County",
-  臺東縣: "Taitung County",
-  澎湖縣: "Penghu County",
-  金門縣: "Kinmen County",
-  連江縣: "Lienchiang County",
+  臺北: "Taipei",
+  新北: "New Taipei",
+  桃園: "Taoyuan",
+  臺中: "Taichung",
+  臺南: "Tainan",
+  高雄: "Kaohsiung",
+  基隆: "Keelung",
+  新竹: "Hsinchu",
+  嘉義: "Chiayi",
+  苗栗: "Miaoli",
+  彰化: "Changhua",
+  南投: "Nantou",
+  雲林: "Yunlin",
+  屏東: "Pingtung",
+  宜蘭: "Yilan",
+  花蓮: "Hualien",
+  臺東: "Taitung",
+  澎湖: "Penghu",
+  金門: "Kinmen",
+  連江: "Lienchiang",
 } as const;
 
 // 反向對照表（英文到中文）

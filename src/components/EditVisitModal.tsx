@@ -22,8 +22,23 @@ export default function EditVisitModal({
   
   // 找出對應的中文縣市名稱
   const getCountyKey = (englishName: string) => {
+    // 先嘗試直接匹配
     const entry = Object.entries(COUNTY_NAMES).find(([, value]) => value === englishName);
-    return entry ? entry[0] : "臺北市";
+    if (entry) return entry[0];
+    
+    // 如果沒有找到，嘗試移除 " County" 後綴
+    const nameWithoutCounty = englishName.replace(/\s+County$/, '');
+    const entryWithoutCounty = Object.entries(COUNTY_NAMES).find(([, value]) => value === nameWithoutCounty);
+    if (entryWithoutCounty) return entryWithoutCounty[0];
+    
+    // 如果還是沒有找到，嘗試移除 " City" 後綴
+    const nameWithoutCity = englishName.replace(/\s+City$/, '');
+    const entryWithoutCity = Object.entries(COUNTY_NAMES).find(([, value]) => value === nameWithoutCity);
+    if (entryWithoutCity) return entryWithoutCity[0];
+    
+    // 如果都沒有找到，預設為臺北
+    console.warn(`無法找到縣市名稱對應: ${englishName}`);
+    return "臺北";
   };
 
   const [county, setCounty] = useState<string>(getCountyKey(visitData.county));
@@ -196,11 +211,11 @@ export default function EditVisitModal({
       }
 
       // 更新造訪記錄
-      const res = await fetch(`/api/visited/${visitData.id}`, {
+      const res = await fetch(`/api/v1/content/visited/${visitData.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          county: COUNTY_NAMES[county as keyof typeof COUNTY_NAMES],
+          county: county,
           note: note.trim(),
           ig_url: processedIgUrl || null,
           image_url: finalImageUrls[0] || null, // 保持向後相容性
@@ -229,7 +244,7 @@ export default function EditVisitModal({
     setError("");
 
     try {
-      const response = await fetch(`/api/visited/${visitData.id}`, {
+      const response = await fetch(`/api/v1/content/visited/${visitData.id}`, {
         method: "DELETE",
       });
 
@@ -407,7 +422,7 @@ export default function EditVisitModal({
               {/* 新圖片預覽 */}
               {imagePreviews.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm text-gray-400 mb-2">新增圖片</h4>
+                  <h4 className="text-sm text-gray-400 mb-2">{t("new_images")}</h4>
                   <div className="grid grid-cols-3 gap-3">
                     {imagePreviews.map((preview, index) => (
                       <div key={`new-${index}`} className="relative aspect-square">
