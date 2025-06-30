@@ -14,8 +14,7 @@ export async function createNotification(
   actorId: string,
   type: NotificationType,
   postId?: string,
-  commentId?: string,
-  language: 'zh-Hant' | 'en' = 'zh-Hant'
+  commentId?: string
 ) {
   try {
     // 不要為自己的動作創建通知
@@ -24,49 +23,46 @@ export async function createNotification(
     }
 
     // 獲取按讚者/留言者的顯示名稱
-    const { data: actorProfile } = await supabase
-      .from("user_profiles")
-      .select("display_name")
-      .eq("user_id", actorId)
-      .single();
-
-    const actorName = actorProfile?.display_name || actorId.split('@')[0] || "用戶";
-
-    // 根據語言和類型生成通知內容
-    let content = "";
-    if (language === 'zh-Hant') {
-      switch (type) {
-        case 'like_post':
-          content = `${actorName} 按讚了你的文章`;
-          break;
-        case 'like_comment':
-          content = `${actorName} 按讚了你的留言`;
-          break;
-        case 'comment_post':
-          content = `${actorName} 留言了你的文章`;
-          break;
+    let actorName = "用戶";
+    
+    try {
+      // 統一用戶資訊查詢邏輯：先嘗試用 user_id 查詢，再嘗試用 email 查詢
+      let userProfile = null;
+      
+      // 先嘗試用 user_id 查詢
+      const { data: profileByUserId } = await supabase
+        .from("user_profiles")
+        .select("display_name")
+        .eq("user_id", actorId)
+        .single();
+      
+      if (profileByUserId?.display_name) {
+        userProfile = profileByUserId;
+      } else {
+        // 再嘗試用 email 查詢
+        const { data: profileByEmail } = await supabase
+          .from("user_profiles")
+          .select("display_name")
+          .eq("email", actorId)
+          .single();
+        userProfile = profileByEmail;
       }
-    } else {
-      switch (type) {
-        case 'like_post':
-          content = `${actorName} liked your post`;
-          break;
-        case 'like_comment':
-          content = `${actorName} liked your comment`;
-          break;
-        case 'comment_post':
-          content = `${actorName} commented on your post`;
-          break;
-      }
+
+      actorName = userProfile?.display_name || actorId.split('@')[0] || "用戶";
+    } catch (error) {
+      console.error("獲取用戶資料失敗:", error);
+      // 如果查詢失敗，使用 fallback
+      actorName = actorId.split('@')[0] || "用戶";
     }
 
+    // 儲存通知類型和參數，不儲存具體的語言內容
     const notificationData = {
       user_id: targetUserId,
       actor_id: actorId,
       type: type,
       post_id: postId || null,
       comment_id: commentId || null,
-      content: content,
+      actor_name: actorName, // 儲存演員名稱
       is_read: false,
     };
 
@@ -83,5 +79,36 @@ export async function createNotification(
   } catch (error) {
     console.error("通知建立過程錯誤:", error);
     return { success: false, error };
+  }
+}
+
+// 根據通知類型和當前語言生成顯示內容
+export function generateNotificationDisplayContent(
+  type: NotificationType,
+  actorName: string,
+  language: 'zh-Hant' | 'en' = 'zh-Hant'
+): string {
+  if (language === 'zh-Hant') {
+    switch (type) {
+      case 'like_post':
+        return `${actorName} 按讚了你的文章`;
+      case 'like_comment':
+        return `${actorName} 按讚了你的留言`;
+      case 'comment_post':
+        return `${actorName} 留言了你的文章`;
+      default:
+        return `${actorName} 與你互動了`;
+    }
+  } else {
+    switch (type) {
+      case 'like_post':
+        return `${actorName} liked your post`;
+      case 'like_comment':
+        return `${actorName} liked your comment`;
+      case 'comment_post':
+        return `${actorName} commented on your post`;
+      default:
+        return `${actorName} interacted with you`;
+    }
   }
 } 

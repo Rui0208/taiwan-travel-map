@@ -280,7 +280,8 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
 
   return (
     <>
-      <div className="fixed left-0 top-0 h-full w-20 bg-black flex flex-col z-40">
+      {/* 桌面版 Sidebar - 左側垂直 */}
+      <div className="hidden md:flex fixed left-0 top-0 h-full w-20 bg-black flex-col z-40">
         {/* Logo */}
         <div className="p-4">
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
@@ -360,13 +361,79 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
             ))}
           </div>
         </div>
-
       </div>
 
-      {/* Tooltip */}
+      {/* 手機版 Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-gray-800 z-40">
+        <div className="flex items-center justify-around h-full px-4">
+          {/* Navigation Items */}
+          <div className="flex items-center justify-around flex-1 max-w-sm">
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item)}
+                className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 relative ${
+                  item.isActive
+                    ? "text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <div className="relative">
+                  {item.icon}
+                  {/* 未讀通知數量顯示 */}
+                  {item.id === "notifications" && unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs mt-1 font-medium">
+                  {item.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* 右側功能區 */}
+          <div className="flex items-center space-x-2 ml-4">
+            {/* 語言切換 */}
+            <div className="flex items-center space-x-1">
+              {languages.map((language) => (
+                <button
+                  key={language.code}
+                  onClick={() => handleLanguageChange(language.code)}
+                  className={`w-8 h-6 rounded text-xs font-medium transition-all duration-200 ${
+                    currentLanguage === language.code
+                      ? "bg-white text-black"
+                      : "bg-gray-800 text-gray-300"
+                  }`}
+                >
+                  {language.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 登出按鈕 */}
+            {status === "authenticated" && (
+              <button
+                onClick={handleLogout}
+                className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center transition-all duration-200"
+              >
+                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tooltip - 只在桌面版顯示 */}
       {hoveredItem && (
         <div
-          className="fixed z-50 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg pointer-events-none"
+          className="hidden md:block fixed z-50 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg pointer-events-none"
           style={{
             left: tooltipPosition.x,
             top: tooltipPosition.y,

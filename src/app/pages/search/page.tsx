@@ -287,13 +287,13 @@ export default function SearchPage() {
                   <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="text-blue-300 text-sm">您正在以訪客模式瀏覽，可搜尋但無法互動</span>
+                  <span className="text-blue-300 text-sm">{t("guest.view_only")}</span>
                 </div>
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
                   className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
                 >
-                  登入
+                  {t("login")}
                 </button>
               </div>
             </div>

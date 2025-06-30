@@ -71,6 +71,7 @@
   "view_instagram_post": "View Instagram post",
   "view_on_instagram": "View on Instagram",
   "just_now": "Just now",
+  "minutes_ago": "{{count}} minutes ago",
   "hours_ago": "{{count}} hours ago",
   "days_ago": "{{count}} days ago",
   "like": "Like",

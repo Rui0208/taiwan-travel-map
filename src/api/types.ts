@@ -59,6 +59,7 @@ export interface Notification {
   post_id?: string;
   comment_id?: string;
   content: string;
+  actor_name?: string;
   is_read: boolean;
   created_at: string;
   post?: {

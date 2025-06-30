@@ -59,43 +59,43 @@ export default function HomePage() {
   return (
     <main className="h-full flex flex-col bg-black overflow-hidden">
       {/* 標題欄 */}
-      <div className="flex-none bg-black px-6 py-4">
-        <div className="w-full mx-auto flex justify-between">
-          <div className="flex justify-between items-center w-full gap-4">
+      <div className="flex-none bg-black px-4 md:px-6 py-4">
+        <div className="w-full mx-auto">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-xl md:text-2xl font-bold text-white">
                 {mounted ? t("app.name") : "Taiwan Travel Map"}
               </h1>
             </div>
             
             {/* 訪客模式或登入使用者的統計 */}
             {status === "authenticated" ? (
-              <div className="flex items-center gap-6 text-gray-400">
+              <div className="flex items-center justify-center md:justify-end gap-4 md:gap-6 text-gray-400">
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex flex-col items-center">
-                    <span className="text-lg font-bold">
+                    <span className="text-base md:text-lg font-bold">
                       {stats.totalCounties}
                     </span>
-                    <span className="text-sm">{t("counties")}</span>
+                    <span className="text-xs md:text-sm">{t("counties")}</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex flex-col items-center">
-                    <span className="text-lg font-bold">
+                    <span className="text-base md:text-lg font-bold">
                       {stats.totalPosts}
                     </span>
-                    <span className="text-sm">{t("posts")}</span>
+                    <span className="text-xs md:text-sm">{t("posts")}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4">
-                <div className="text-gray-400 text-sm">
+              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+                <div className="text-gray-400 text-sm text-center md:text-left">
                   {t("welcome_guest")}
                 </div>
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors w-full md:w-auto"
                 >
                   登入
                 </button>

@@ -136,8 +136,7 @@ export async function POST(request: NextRequest) {
           session.user.id,
           notificationType,
           post_id || undefined,
-          comment_id || undefined,
-          'zh-Hant' // 預設使用繁體中文
+          comment_id || undefined
         );
       }
     } catch (notificationError) {

@@ -70,6 +70,7 @@
   "view_instagram_post": "查看 Instagram 貼文",
   "view_on_instagram": "在 Instagram 上查看",
   "just_now": "剛剛",
+  "minutes_ago": "{{count}} 分鐘前",
   "hours_ago": "{{count}} 小時前",
   "days_ago": "{{count}} 天前",
   "like": "讚",

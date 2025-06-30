@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import LoginModal from "@/components/LoginModal";
 import { Notification } from "@/api/types";
+import { generateNotificationDisplayContent } from "@/lib/notification-utils";
 
 interface NotificationResponse {
   success: boolean;
@@ -22,7 +23,7 @@ interface NotificationResponse {
 export default function NotificationsPage() {
   const { status } = useSession();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,7 +166,7 @@ export default function NotificationsPage() {
       return t("just_now");
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} 分鐘前`;
+      return t("minutes_ago", { count: minutes });
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
       return t("hours_ago", { count: hours });
@@ -202,6 +203,24 @@ export default function NotificationsPage() {
         </svg>
       </div>
     );
+  };
+
+  // 生成通知顯示內容
+  const getNotificationContent = (notification: Notification) => {
+    // 優先使用 actor 物件中的 name，如果沒有才使用 actor_name 欄位
+    const actorName = notification.actor?.name || notification.actor_name || '用戶';
+    
+    // 如果有 actor_name 欄位，使用新的動態翻譯方式
+    if (notification.type) {
+      return generateNotificationDisplayContent(
+        notification.type,
+        actorName,
+        i18n.language as 'zh-Hant' | 'en'
+      );
+    }
+    
+    // 如果沒有，回退到原本的 content 欄位
+    return notification.content || '';
   };
 
   useEffect(() => {
@@ -320,7 +339,7 @@ export default function NotificationsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
                         <p className="text-white font-medium text-sm">
-                          {notification.content}
+                          {getNotificationContent(notification)}
                         </p>
                         {!notification.is_read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>

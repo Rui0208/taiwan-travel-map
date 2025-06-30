@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS notifications (
   type VARCHAR(50) NOT NULL, -- 通知類型: 'like_post', 'like_comment', 'comment_post'
   post_id UUID REFERENCES visited_places(id) ON DELETE CASCADE,
   comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
-  content TEXT, -- 通知內容文字
+  content TEXT, -- 通知內容文字（保留用於向後相容）
+  actor_name TEXT, -- 演員名稱，用於動態語言翻譯
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   
@@ -28,6 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_actor_name ON notifications(actor_name);
 
 -- 建立複合索引用於查詢
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read, created_at DESC);
@@ -35,18 +37,39 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_i
 -- 啟用 RLS
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- 建立 RLS 政策
--- 用戶只能查看自己的通知
-CREATE POLICY "Users can view their own notifications" ON notifications
-  FOR SELECT USING (user_id = auth.email());
+-- 建立 RLS 政策（先檢查是否已存在）
+DO $$
+BEGIN
+    -- 檢查並建立 "Users can view their own notifications" 政策
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'notifications' 
+        AND policyname = 'Users can view their own notifications'
+    ) THEN
+        CREATE POLICY "Users can view their own notifications" ON notifications
+          FOR SELECT USING (user_id = auth.email());
+    END IF;
 
--- 系統可以插入通知（通過 API）
-CREATE POLICY "System can insert notifications" ON notifications
-  FOR INSERT WITH CHECK (true);
+    -- 檢查並建立 "System can insert notifications" 政策
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'notifications' 
+        AND policyname = 'System can insert notifications'
+    ) THEN
+        CREATE POLICY "System can insert notifications" ON notifications
+          FOR INSERT WITH CHECK (true);
+    END IF;
 
--- 用戶可以更新自己的通知（標記已讀）
-CREATE POLICY "Users can update their own notifications" ON notifications
-  FOR UPDATE USING (user_id = auth.email());
+    -- 檢查並建立 "Users can update their own notifications" 政策
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'notifications' 
+        AND policyname = 'Users can update their own notifications'
+    ) THEN
+        CREATE POLICY "Users can update their own notifications" ON notifications
+          FOR UPDATE USING (user_id = auth.email());
+    END IF;
+END $$;
 
 -- 建立函數來創建通知
 CREATE OR REPLACE FUNCTION create_notification(
@@ -55,7 +78,8 @@ CREATE OR REPLACE FUNCTION create_notification(
   p_type VARCHAR(50),
   p_post_id UUID DEFAULT NULL,
   p_comment_id UUID DEFAULT NULL,
-  p_content TEXT DEFAULT NULL
+  p_content TEXT DEFAULT NULL,
+  p_actor_name TEXT DEFAULT NULL
 )
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -64,9 +88,14 @@ BEGIN
     RETURN FALSE;
   END IF;
   
+  -- 如果沒有提供 actor_name，從 actor_id 提取
+  IF p_actor_name IS NULL THEN
+    p_actor_name := split_part(p_actor_id, '@', 1);
+  END IF;
+  
   -- 插入通知（ON CONFLICT DO NOTHING 避免重複通知）
-  INSERT INTO notifications (user_id, actor_id, type, post_id, comment_id, content)
-  VALUES (target_user_id, p_actor_id, p_type, p_post_id, p_comment_id, p_content)
+  INSERT INTO notifications (user_id, actor_id, type, post_id, comment_id, content, actor_name)
+  VALUES (target_user_id, p_actor_id, p_type, p_post_id, p_comment_id, p_content, p_actor_name)
   ON CONFLICT (user_id, actor_id, type, post_id, comment_id) DO NOTHING;
   
   RETURN TRUE;
@@ -109,7 +138,8 @@ BEGIN
       'like_post',
       NEW.post_id,
       NULL,
-      actor_name || ' 讚了你的貼文'
+      actor_name || ' 讚了你的貼文',
+      actor_name
     );
   END IF;
   
@@ -141,7 +171,8 @@ BEGIN
       'like_comment',
       NULL,
       NEW.comment_id,
-      actor_name || ' 讚了你的留言'
+      actor_name || ' 讚了你的留言',
+      actor_name
     );
   END IF;
   
@@ -173,7 +204,8 @@ BEGIN
       'comment_post',
       NEW.post_id,
       NEW.id,
-      actor_name || ' 留言了你的貼文'
+      actor_name || ' 留言了你的貼文',
+      actor_name
     );
   END IF;
   

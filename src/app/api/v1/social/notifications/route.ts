@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         post_id,
         comment_id,
         content,
+        actor_name,
         is_read,
         created_at
       `)

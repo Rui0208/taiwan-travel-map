@@ -345,15 +345,15 @@ export default function SocialCountyView({
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col">
       {/* 標題列 - 固定在頂部 */}
       <div className="flex-none z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
-        <div className="w-full mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="w-full mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-3 md:space-x-4">
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors"
               aria-label={t("close")}
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5 md:w-6 md:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -367,7 +367,7 @@ export default function SocialCountyView({
               </svg>
             </button>
             <div>
-              <h1 className="text-xl font-bold text-white flex items-center space-x-2">
+              <h1 className="text-lg md:text-xl font-bold text-white flex items-center space-x-2">
                 <span>{displayCountyName}</span>
                 {showOnlyMine && (
                   <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
@@ -375,7 +375,7 @@ export default function SocialCountyView({
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-blue-400">
+              <p className="text-xs md:text-sm text-blue-400">
                 {showOnlyMine ? 
                   t("visit_count", { count: visitCount }) : 
                   t("posts_count", { count: visitCount })
@@ -388,10 +388,10 @@ export default function SocialCountyView({
           {!isGuest && (
             <button
               onClick={onAdd}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition-colors flex items-center space-x-1 md:space-x-2"
             >
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3 md:w-4 md:h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -403,7 +403,8 @@ export default function SocialCountyView({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <span>{t("add_place")}</span>
+              <span className="hidden sm:inline">{t("add_place")}</span>
+              <span className="sm:hidden">新增</span>
             </button>
           )}
         </div>
@@ -411,9 +412,9 @@ export default function SocialCountyView({
 
       {/* 主要內容區域 - 直式單欄佈局 */}
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-600">
-        <div className="max-w-3xl mx-auto px-4 py-6 pb-20">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-6 pb-20">
           {postsWithSocialData.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {postsWithSocialData.map((post: PostWithDetails) => (
                 <SocialPostCard
                   key={post.id}
@@ -431,10 +432,10 @@ export default function SocialCountyView({
             </div>
           ) : (
             // 空狀態
-            <div className="flex flex-col items-center justify-center h-96 text-center">
-              <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <div className="flex flex-col items-center justify-center h-80 md:h-96 text-center">
+              <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-800 rounded-full flex items-center justify-center mb-4 md:mb-6">
                 <svg
-                  className="w-12 h-12 text-gray-600"
+                  className="w-10 h-10 md:w-12 md:h-12 text-gray-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -453,17 +454,17 @@ export default function SocialCountyView({
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
+              <h3 className="text-lg md:text-xl font-semibold text-white mb-2">
                 {t("no_visits_yet")}
               </h3>
           
               {!isGuest && (
                 <button
                   onClick={onAdd}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-base font-medium transition-colors flex items-center space-x-2"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-sm md:text-base font-medium transition-colors flex items-center space-x-2"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 md:w-5 md:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

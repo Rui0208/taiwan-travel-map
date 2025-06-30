@@ -200,21 +200,21 @@ export default function ProfilePage() {
 
   return (
     <main className="h-full bg-black overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-600">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-3 md:px-4">
         {/* 個人檔案標題欄 */}
-        <div className="py-4 flex items-center justify-between">
+        <div className="py-3 md:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center space-x-3">
             {!profileData?.isOwnProfile && (
               <button
                 onClick={() => router.back()}
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-xl md:text-2xl font-bold text-white">
               {profileData?.isOwnProfile ? t("sidebar.profile") : (profileData?.user.name || "用戶檔案")}
             </h1>
           </div>
@@ -223,9 +223,9 @@ export default function ProfilePage() {
           {profileData?.isOwnProfile && (
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
               <span>{t("profile.edit_profile")}</span>
@@ -236,27 +236,27 @@ export default function ProfilePage() {
         {/* 個人檔案內容 */}
         <div className="pb-20">
           {error && (
-            <div className="bg-red-900/50 border border-red-700 rounded-xl p-4 mb-6">
+            <div className="bg-red-900/50 border border-red-700 rounded-xl p-3 md:p-4 mb-4 md:mb-6">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5 text-red-400 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
-                <span className="text-red-200">{error}</span>
+                <span className="text-red-200 text-sm md:text-base">{error}</span>
               </div>
             </div>
           )}
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-96">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-              <p className="text-gray-400">{t("profile.loading")}</p>
+            <div className="flex flex-col items-center justify-center h-80 md:h-96">
+              <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-4 border-blue-500 border-t-transparent mb-3 md:mb-4"></div>
+              <p className="text-gray-400 text-sm md:text-base">{t("profile.loading")}</p>
             </div>
           ) : profileData ? (
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {/* 用戶資訊區域 */}
-              <div className="flex items-center space-x-6 p-6 bg-gray-900/30 rounded-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 p-4 md:p-6 bg-gray-900/30 rounded-xl">
                 {/* 頭像 */}
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-700 flex-shrink-0 mx-auto sm:mx-0">
                   {profileData.user.image ? (
                     <Image
                       src={profileData.user.image}
@@ -267,7 +267,7 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white text-2xl font-bold">
+                      <span className="text-white text-xl md:text-2xl font-bold">
                         {profileData.user.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -275,42 +275,42 @@ export default function ProfilePage() {
                 </div>
 
                 {/* 用戶資訊 */}
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
                     {profileData.user.name}
                   </h2>
                  
                   {profileData.user.bio && (
-                    <p className="text-gray-300 mb-4 text-sm">
+                    <p className="text-gray-300 mb-3 md:mb-4 text-xs md:text-sm">
                       {profileData.user.bio}
                     </p>
                   )}
 
                   {/* 統計數據 */}
-                  <div className="grid grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-lg md:text-2xl font-bold text-white">
                         {formatCount(profileData.stats.totalPosts)}
                       </div>
-                      <div className="text-sm text-gray-400">{t("profile.posts")}</div>
+                      <div className="text-xs md:text-sm text-gray-400">{t("profile.posts")}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-lg md:text-2xl font-bold text-white">
                         {formatCount(profileData.stats.totalCounties)}
                       </div>
-                      <div className="text-sm text-gray-400">{t("profile.counties")}</div>
+                      <div className="text-xs md:text-sm text-gray-400">{t("profile.counties")}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-lg md:text-2xl font-bold text-white">
                         {formatCount(profileData.stats.totalLikes)}
                       </div>
-                      <div className="text-sm text-gray-400">{t("profile.likes")}</div>
+                      <div className="text-xs md:text-sm text-gray-400">{t("profile.likes")}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-lg md:text-2xl font-bold text-white">
                         {formatCount(profileData.stats.totalComments)}
                       </div>
-                      <div className="text-sm text-gray-400">{t("profile.comments")}</div>
+                      <div className="text-xs md:text-sm text-gray-400">{t("profile.comments")}</div>
                     </div>
                   </div>
                 </div>
@@ -318,27 +318,27 @@ export default function ProfilePage() {
 
               {/* 貼文網格 */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
+                  <h3 className="text-lg md:text-xl font-bold text-white">
                     {profileData.isOwnProfile ? t("profile.my_posts") : "貼文"}
                   </h3>
-                  <div className="text-gray-400 text-sm">
+                  <div className="text-gray-400 text-xs md:text-sm">
                     {t("posts_count", { count: profileData.posts.length })}
                   </div>
                 </div>
 
                 {profileData.posts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-800 rounded-full flex items-center justify-center mb-3 md:mb-4">
+                      <svg className="w-6 h-6 md:w-8 md:h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <h4 className="text-lg font-semibold text-white mb-2">{t("profile.no_posts")}</h4>
-                    <p className="text-gray-400">{t("profile.no_posts_desc")}</p>
+                    <h4 className="text-base md:text-lg font-semibold text-white mb-2">{t("profile.no_posts")}</h4>
+                    <p className="text-gray-400 text-sm md:text-base">{t("profile.no_posts_desc")}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-1 md:gap-2">
                     {profileData.posts.map((post) => (
                       <div
                         key={post.id}
@@ -355,7 +355,7 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6 md:w-8 md:h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
@@ -364,7 +364,7 @@ export default function ProfilePage() {
                         {/* 懸停效果 */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white text-center">
-                            <div className="text-sm font-medium">{post.county}</div>
+                            <div className="text-xs md:text-sm font-medium">{post.county}</div>
                             {post.note && (
                               <div className="text-xs text-gray-300 mt-1">
                                 {post.note.substring(0, 30)}...
@@ -379,14 +379,14 @@ export default function ProfilePage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-96 text-center">
-              <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center h-80 md:h-96 text-center">
+              <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-800 rounded-full flex items-center justify-center mb-4 md:mb-6">
+                <svg className="w-10 h-10 md:w-12 md:h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">{t("profile.error")}</h3>
-              <p className="text-gray-400">{t("error_save_failed")}</p>
+              <h3 className="text-lg md:text-xl font-semibold text-white mb-2">{t("profile.error")}</h3>
+              <p className="text-gray-400 text-sm md:text-base">{t("error_save_failed")}</p>
             </div>
           )}
         </div>
