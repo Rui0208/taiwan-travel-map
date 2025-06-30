@@ -40,12 +40,6 @@ export default function SocialCountyView({
     setMounted(true);
   }, []);
 
-  // 檢查資料庫狀態（僅已登入用戶需要）
-  const { data: dbStatus } = useSWR(
-    !isGuest ? "/api/v1/system/db-status" : null, 
-    fetcher
-  );
-
   // 使用新的 posts API 獲取帶有社交資料的文章
   // 只有在已登入模式下才調用API，訪客模式的資料已經從縣市頁面傳入
   const { data: postsData, mutate: mutatePosts, error: postsError } = useSWR<{ data: PostWithDetails[] }>(
@@ -135,6 +129,28 @@ export default function SocialCountyView({
       const post = postsWithSocialData.find((p: PostWithDetails) => p.id === postId);
       if (!post) return;
 
+      // 樂觀更新按讚狀態
+      mutatePosts(
+        (currentData) => {
+          if (!currentData?.data) return currentData;
+          
+          return {
+            ...currentData,
+            data: currentData.data.map((p) => {
+              if (p.id === postId) {
+                return {
+                  ...p,
+                  is_liked: !p.is_liked,
+                  likes_count: (p.likes_count || 0) + (p.is_liked ? -1 : 1),
+                };
+              }
+              return p;
+            }),
+          };
+        },
+        false // 不重新驗證
+      );
+
       if (post.is_liked) {
         // 取消按讚
         const response = await fetch(endpoints.likes.delete(postId), {
@@ -159,12 +175,14 @@ export default function SocialCountyView({
         }
       }
 
-      // 刷新資料
-      await mutatePosts();
+      // 通知父組件更新
       onRefresh();
     } catch (error) {
       console.error("按讚操作失敗:", error);
       alert(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
+      
+      // 發生錯誤時重新獲取資料
+      await mutatePosts();
     }
   };
 
@@ -190,7 +208,7 @@ export default function SocialCountyView({
         throw new Error(error.error || "留言失敗");
       }
 
-      // 刷新資料
+      // 重新獲取資料以包含新的留言
       await mutatePosts();
       onRefresh();
     } catch (error) {
@@ -245,7 +263,7 @@ export default function SocialCountyView({
         }
       }
 
-      // 刷新資料
+      // 重新獲取資料
       await mutatePosts();
       onRefresh();
     } catch (error) {
@@ -267,7 +285,7 @@ export default function SocialCountyView({
         throw new Error(error.error || "編輯留言失敗");
       }
 
-      // 刷新資料
+      // 重新獲取資料
       await mutatePosts();
       onRefresh();
     } catch (error) {
@@ -287,7 +305,7 @@ export default function SocialCountyView({
         throw new Error(error.error || "刪除留言失敗");
       }
 
-      // 刷新資料
+      // 重新獲取資料
       await mutatePosts();
       onRefresh();
     } catch (error) {
@@ -310,7 +328,6 @@ export default function SocialCountyView({
   // 顯示錯誤狀態（開發用）
   console.log("Social County View Debug:", {
     postsError,
-    dbStatus,
     countyName,
     visitedDataLength: visitedData.length,
     postsDataExists: !!postsData,
@@ -367,7 +384,7 @@ export default function SocialCountyView({
             </div>
           </div>
           
-                    {/* 新增按鈕 - 只有登入用戶才顯示 */}
+          {/* 新增按鈕 - 只有登入用戶才顯示 */}
           {!isGuest && (
             <button
               onClick={onAdd}
@@ -467,4 +484,4 @@ export default function SocialCountyView({
       </div>
     </div>
   );
-} 
+}

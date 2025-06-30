@@ -61,6 +61,27 @@ const DB_COUNTY_MAP: Record<string, string> = {
   "澎湖": "澎湖",
   "金門": "金門",
   "連江": "連江",
+  // 英文格式（新增地點時使用）
+  "Taipei": "臺北",
+  "New Taipei": "新北",
+  "Taoyuan": "桃園",
+  "Taichung": "臺中",
+  "Tainan": "臺南",
+  "Kaohsiung": "高雄",
+  "Keelung": "基隆",
+  "Hsinchu": "新竹",
+  "Chiayi": "嘉義",
+  "Miaoli": "苗栗",
+  "Changhua": "彰化",
+  "Nantou": "南投",
+  "Yunlin": "雲林",
+  "Pingtung": "屏東",
+  "Yilan": "宜蘭",
+  "Hualien": "花蓮",
+  "Taitung": "臺東",
+  "Penghu": "澎湖",
+  "Kinmen": "金門",
+  "Lienchiang": "連江",
 };
 
 export default function CountyPage() {
@@ -187,6 +208,12 @@ export default function CountyPage() {
     await mutate();
   };
 
+  // 處理社交互動的更新（留言、按讚等）
+  const handleSocialUpdate = async () => {
+    // 重新驗證資料，但不重新載入整個頁面
+    await mutate();
+  };
+
   if (status === "loading" || !mounted) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black p-4">
@@ -198,8 +225,6 @@ export default function CountyPage() {
     );
   }
 
-
-
   return (
     <main className="h-full bg-black overflow-hidden">
       {/* 社交風格縣市詳細資訊 */}
@@ -209,7 +234,7 @@ export default function CountyPage() {
         onClose={handleCloseCard}
         onEdit={handleEdit}
         onAdd={handleAdd}
-        onRefresh={mutate}
+        onRefresh={handleSocialUpdate}
         currentUserId={session?.user?.id}
         isGuest={status === "unauthenticated"}
         onGuestInteraction={handleGuestInteraction}

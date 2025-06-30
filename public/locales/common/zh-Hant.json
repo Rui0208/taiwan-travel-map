@@ -291,5 +291,20 @@
   },
   "no_public_posts": "目前沒有人在{{county}}分享公開的旅遊記錄",
   "no_mine_posts": "你還沒有在{{county}}留下足跡",
-  "no_posts_hint": "開始記錄你在{{county}}的美好回憶吧！"
+  "no_posts_hint": "開始記錄你在{{county}}的美好回憶吧！",
+  "edit_image": "編輯圖片",
+  "scale": "縮放",
+  "reset": "重置",
+  "image_editor_instruction": "拖拽調整位置，滑桿調整縮放",
+  "image_size_limit": "每張圖片最大 10MB",
+  "image_format_support": "支援 JPG、PNG、GIF 格式",
+  "image_count_limit": "最多 10 張圖片",
+  "image_upload_limits": {
+    "max_count": "最多 {{count}} 張圖片",
+    "max_size": "每張圖片最大 {{size}}MB",
+    "supported_formats": "支援格式：{{formats}}",
+    "file_too_large": "檔案 {{filename}} 太大（{{size}}MB），超過 {{limit}}MB 限制",
+    "file_too_small": "檔案 {{filename}} 太小（{{size}}KB），至少需要 10KB",
+    "invalid_format": "檔案 {{filename}} 格式不支援，請上傳圖片檔案"
+  }
 }

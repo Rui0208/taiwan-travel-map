@@ -8,6 +8,7 @@
   "delete": "Delete",
   "deleting": "Deleting...",
   "edit": "Edit",
+  "edit_image": "Edit Image",
   "update": "Update",
   "updating": "Updating...",
   "close": "Close",
@@ -28,7 +29,7 @@
   "description": "Description",
   "description_placeholder": "Share your visit experience...",
   "upload_image": "Upload Image",
-  "upload_images": "Upload Images (Max 10)",
+  "upload_images": "Upload Images",
   "no_image": "No Image",
   "drag_drop_images": "Drag & drop images here or click to select",
   "selected_images": "{{count}} images selected",
@@ -290,5 +291,19 @@
     "Lienchiang": "Lienchiang"
   },
   "no_mine_posts": "You haven't left any footprints in {{county}} yet",
-  "no_posts_hint": "Start recording your wonderful memories in {{county}}!"
+  "no_posts_hint": "Start recording your wonderful memories in {{county}}!",
+  "scale": "Scale",
+  "reset": "Reset",
+  "image_editor_instruction": "Drag to adjust position, slider to adjust scale",
+  "image_size_limit": "Max 10MB per image",
+  "image_format_support": "Supports JPG, PNG, GIF formats",
+  "image_count_limit": "Max 10 images",
+  "image_upload_limits": {
+    "max_count": "Maximum {{count}} images",
+    "max_size": "Maximum {{size}}MB per image",
+    "supported_formats": "Supported formats: {{formats}}",
+    "file_too_large": "File {{filename}} is too large ({{size}}MB), exceeds {{limit}}MB limit",
+    "file_too_small": "File {{filename}} is too small ({{size}}KB), minimum 10KB required",
+    "invalid_format": "File {{filename}} format not supported, please upload image files"
+  }
 }

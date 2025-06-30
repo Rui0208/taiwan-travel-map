@@ -53,6 +53,27 @@ const DB_COUNTY_MAP: Record<string, string> = {
   "澎湖": "澎湖",
   "金門": "金門",
   "連江": "連江",
+  // 英文格式（新增地點時使用）
+  "Taipei": "臺北",
+  "New Taipei": "新北",
+  "Taoyuan": "桃園",
+  "Taichung": "臺中",
+  "Tainan": "臺南",
+  "Kaohsiung": "高雄",
+  "Keelung": "基隆",
+  "Hsinchu": "新竹",
+  "Chiayi": "嘉義",
+  "Miaoli": "苗栗",
+  "Changhua": "彰化",
+  "Nantou": "南投",
+  "Yunlin": "雲林",
+  "Pingtung": "屏東",
+  "Yilan": "宜蘭",
+  "Hualien": "花蓮",
+  "Taitung": "臺東",
+  "Penghu": "澎湖",
+  "Kinmen": "金門",
+  "Lienchiang": "連江",
 };
 
 // GET /api/posts - 獲取帶有社交資料的文章列表

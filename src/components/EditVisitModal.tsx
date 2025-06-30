@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { COUNTY_NAMES, VisitedPlace } from "@/api/types";
+import { IMAGE_UPLOAD_LIMITS } from "@/lib/constants";
 
 interface EditVisitModalProps {
   isOpen: boolean;
@@ -107,7 +108,7 @@ export default function EditVisitModal({
 
     // 檢查總數量限制（現有圖片 + 新圖片 - 已移除圖片）
     const totalImages = existingImages.length - removedImages.length + imageFiles.length + files.length;
-    if (totalImages > 10) {
+    if (totalImages > IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
       setError(t("max_images_limit"));
       return;
     }
@@ -115,23 +116,46 @@ export default function EditVisitModal({
     // 驗證每個檔案
     const validFiles: File[] = [];
     const newPreviews: string[] = [];
+    const errors: string[] = [];
 
     files.forEach(file => {
       // 檢查檔案類型
       if (!file.type.startsWith("image/")) {
-        setError(`${file.name} 不是有效的圖片格式`);
+        errors.push(t("image_upload_limits.invalid_format", { filename: file.name }));
         return;
       }
 
       // 檢查檔案大小（10MB 限制）
-      if (file.size > 10 * 1024 * 1024) {
-        setError(`${file.name} 檔案大小不能超過 10MB`);
+      if (file.size > IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const maxSizeMB = IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024);
+        errors.push(t("image_upload_limits.file_too_large", { 
+          filename: file.name, 
+          size: fileSizeMB, 
+          limit: maxSizeMB 
+        }));
+        return;
+      }
+
+      // 檢查檔案大小是否太小（小於 10KB）
+      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+        errors.push(t("image_upload_limits.file_too_small", { 
+          filename: file.name, 
+          size: fileSizeKB 
+        }));
         return;
       }
 
       validFiles.push(file);
       newPreviews.push(URL.createObjectURL(file));
     });
+
+    // 顯示錯誤訊息
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
+      return;
+    }
 
     if (validFiles.length > 0) {
       setImageFiles(prev => [...prev, ...validFiles]);
@@ -447,7 +471,82 @@ export default function EditVisitModal({
               )}
 
               {/* 上傳區域 */}
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors">
+              <div 
+                className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (remainingImagesCount >= IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
+                    setError(t("max_images_limit"));
+                    return;
+                  }
+                  
+                  const files = Array.from(e.dataTransfer.files);
+                  if (files.length > 0) {
+                    // 檢查總數量限制（現有圖片 + 新圖片 - 已移除圖片）
+                    const totalImages = existingImages.length - removedImages.length + imageFiles.length + files.length;
+                    if (totalImages > IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
+                      setError(t("max_images_limit"));
+                      return;
+                    }
+
+                    // 驗證每個檔案
+                    const validFiles: File[] = [];
+                    const newPreviews: string[] = [];
+                    const errors: string[] = [];
+
+                    files.forEach(file => {
+                      // 檢查檔案類型
+                      if (!file.type.startsWith("image/")) {
+                        errors.push(t("image_upload_limits.invalid_format", { filename: file.name }));
+                        return;
+                      }
+
+                      // 檢查檔案大小（5MB 限制）
+                      if (file.size > IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024);
+                        errors.push(t("image_upload_limits.file_too_large", { 
+                          filename: file.name, 
+                          size: fileSizeMB, 
+                          limit: maxSizeMB 
+                        }));
+                        return;
+                      }
+
+                      // 檢查檔案大小是否太小（小於 10KB）
+                      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
+                        const fileSizeKB = (file.size / 1024).toFixed(1);
+                        errors.push(t("image_upload_limits.file_too_small", { 
+                          filename: file.name, 
+                          size: fileSizeKB 
+                        }));
+                        return;
+                      }
+
+                      validFiles.push(file);
+                      newPreviews.push(URL.createObjectURL(file));
+                    });
+
+                    // 顯示錯誤訊息
+                    if (errors.length > 0) {
+                      setError(errors.join('\n'));
+                      return;
+                    }
+
+                    if (validFiles.length > 0) {
+                      setImageFiles(prev => [...prev, ...validFiles]);
+                      setImagePreviews(prev => [...prev, ...newPreviews]);
+                      setError(""); // 清除錯誤訊息
+                    }
+                  }
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -490,6 +589,12 @@ export default function EditVisitModal({
                         {t("selected_images", { count: imageFiles.length })}
                       </p>
                     )}
+                    {/* 容量限制提示 */}
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>• {t("image_upload_limits.max_count", { count: IMAGE_UPLOAD_LIMITS.MAX_COUNT })}</p>
+                      <p>• {t("image_upload_limits.max_size", { size: IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024) })}</p>
+                      <p>• {t("image_upload_limits.supported_formats", { formats: IMAGE_UPLOAD_LIMITS.SUPPORTED_EXTENSIONS.join(", ").toUpperCase() })}</p>
+                    </div>
                   </div>
                 </label>
               </div>

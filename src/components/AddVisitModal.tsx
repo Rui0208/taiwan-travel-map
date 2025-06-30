@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { COUNTY_NAMES } from "@/api/types";
 import { useTranslation } from "react-i18next";
+import ImageEditor from "./ImageEditor";
+import { IMAGE_UPLOAD_LIMITS } from "@/lib/constants";
 
 interface AddVisitModalProps {
   isOpen: boolean;
@@ -28,6 +30,8 @@ export default function AddVisitModal({
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
+  const [editingImageFile, setEditingImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     console.log("AddVisitModal selectedCounty:", selectedCounty);
@@ -65,7 +69,7 @@ export default function AddVisitModal({
     if (files.length === 0) return;
 
     // 檢查總數量限制
-    if (imageFiles.length + files.length > 10) {
+    if (imageFiles.length + files.length > IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
       setError(t("max_images_limit"));
       return;
     }
@@ -73,23 +77,46 @@ export default function AddVisitModal({
     // 驗證每個檔案
     const validFiles: File[] = [];
     const newPreviews: string[] = [];
+    const errors: string[] = [];
 
     files.forEach(file => {
       // 檢查檔案類型
       if (!file.type.startsWith("image/")) {
-        setError(`${file.name} 不是有效的圖片格式`);
+        errors.push(t("image_upload_limits.invalid_format", { filename: file.name }));
         return;
       }
 
       // 檢查檔案大小（10MB 限制）
-      if (file.size > 10 * 1024 * 1024) {
-        setError(`${file.name} 檔案大小不能超過 10MB`);
+      if (file.size > IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const maxSizeMB = IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024);
+        errors.push(t("image_upload_limits.file_too_large", { 
+          filename: file.name, 
+          size: fileSizeMB, 
+          limit: maxSizeMB 
+        }));
+        return;
+      }
+
+      // 檢查檔案大小是否太小（小於 10KB）
+      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+        errors.push(t("image_upload_limits.file_too_small", { 
+          filename: file.name, 
+          size: fileSizeKB 
+        }));
         return;
       }
 
       validFiles.push(file);
       newPreviews.push(URL.createObjectURL(file));
     });
+
+    // 顯示錯誤訊息
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
+      return;
+    }
 
     if (validFiles.length > 0) {
       setImageFiles(prev => [...prev, ...validFiles]);
@@ -105,6 +132,37 @@ export default function AddVisitModal({
     // 移除檔案和預覽
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditImage = (index: number) => {
+    setEditingImageIndex(index);
+    setEditingImageFile(imageFiles[index]);
+  };
+
+  const handleImageEditSave = (editedImage: Blob) => {
+    if (editingImageIndex === null) return;
+
+    // 將編輯後的圖片轉換為 File
+    const editedFile = new File([editedImage], `edited_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    
+    // 更新檔案和預覽
+    const newImageFiles = [...imageFiles];
+    newImageFiles[editingImageIndex] = editedFile;
+    setImageFiles(newImageFiles);
+
+    // 更新預覽
+    const newPreviews = [...imagePreviews];
+    newPreviews[editingImageIndex] = URL.createObjectURL(editedFile);
+    setImagePreviews(newPreviews);
+
+    // 清理編輯狀態
+    setEditingImageIndex(null);
+    setEditingImageFile(null);
+  };
+
+  const handleImageEditCancel = () => {
+    setEditingImageIndex(null);
+    setEditingImageFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -284,6 +342,18 @@ export default function AddVisitModal({
                         fill
                         className="object-contain bg-gray-800 rounded-lg"
                       />
+                      {/* 編輯按鈕 */}
+                      <button
+                        type="button"
+                        onClick={() => handleEditImage(index)}
+                        className="absolute top-2 left-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 text-xs opacity-80 hover:opacity-100 transition-opacity z-10"
+                        title="編輯圖片"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      {/* 移除按鈕 */}
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
@@ -298,7 +368,81 @@ export default function AddVisitModal({
               )}
 
               {/* 上傳區域 */}
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors">
+              <div 
+                className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (imageFiles.length >= IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
+                    setError(t("max_images_limit"));
+                    return;
+                  }
+                  
+                  const files = Array.from(e.dataTransfer.files);
+                  if (files.length > 0) {
+                    // 檢查總數量限制
+                    if (imageFiles.length + files.length > IMAGE_UPLOAD_LIMITS.MAX_COUNT) {
+                      setError(t("max_images_limit"));
+                      return;
+                    }
+
+                    // 驗證每個檔案
+                    const validFiles: File[] = [];
+                    const newPreviews: string[] = [];
+                    const errors: string[] = [];
+
+                    files.forEach(file => {
+                      // 檢查檔案類型
+                      if (!file.type.startsWith("image/")) {
+                        errors.push(t("image_upload_limits.invalid_format", { filename: file.name }));
+                        return;
+                      }
+
+                      // 檢查檔案大小（5MB 限制）
+                      if (file.size > IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE) {
+                        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                        const maxSizeMB = IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024);
+                        errors.push(t("image_upload_limits.file_too_large", { 
+                          filename: file.name, 
+                          size: fileSizeMB, 
+                          limit: maxSizeMB 
+                        }));
+                        return;
+                      }
+
+                      // 檢查檔案大小是否太小（小於 10KB）
+                      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
+                        const fileSizeKB = (file.size / 1024).toFixed(1);
+                        errors.push(t("image_upload_limits.file_too_small", { 
+                          filename: file.name, 
+                          size: fileSizeKB 
+                        }));
+                        return;
+                      }
+
+                      validFiles.push(file);
+                      newPreviews.push(URL.createObjectURL(file));
+                    });
+
+                    // 顯示錯誤訊息
+                    if (errors.length > 0) {
+                      setError(errors.join('\n'));
+                      return;
+                    }
+
+                    if (validFiles.length > 0) {
+                      setImageFiles(prev => [...prev, ...validFiles]);
+                      setImagePreviews(prev => [...prev, ...newPreviews]);
+                      setError(""); // 清除錯誤訊息
+                    }
+                  }
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -306,12 +450,12 @@ export default function AddVisitModal({
                   onChange={handleImageChange}
                   className="hidden"
                   id="images-upload"
-                  disabled={imageFiles.length >= 10}
+                  disabled={imageFiles.length >= IMAGE_UPLOAD_LIMITS.MAX_COUNT}
                 />
                 <label
                   htmlFor="images-upload"
                   className={`cursor-pointer ${
-                    imageFiles.length >= 10 
+                    imageFiles.length >= IMAGE_UPLOAD_LIMITS.MAX_COUNT 
                       ? "text-gray-500 cursor-not-allowed" 
                       : "text-gray-300 hover:text-white"
                   }`}
@@ -331,7 +475,7 @@ export default function AddVisitModal({
                       />
                     </svg>
                     <p className="text-sm">
-                      {imageFiles.length >= 10 
+                      {imageFiles.length >= IMAGE_UPLOAD_LIMITS.MAX_COUNT 
                         ? t("max_images_limit")
                         : t("drag_drop_images")
                       }
@@ -341,6 +485,12 @@ export default function AddVisitModal({
                         {t("selected_images", { count: imageFiles.length })}
                       </p>
                     )}
+                    {/* 容量限制提示 */}
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>• {t("image_upload_limits.max_count", { count: IMAGE_UPLOAD_LIMITS.MAX_COUNT })}</p>
+                      <p>• {t("image_upload_limits.max_size", { size: IMAGE_UPLOAD_LIMITS.MAX_FILE_SIZE / (1024 * 1024) })}</p>
+                      <p>• {t("image_upload_limits.supported_formats", { formats: IMAGE_UPLOAD_LIMITS.SUPPORTED_EXTENSIONS.join(", ").toUpperCase() })}</p>
+                    </div>
                   </div>
                 </label>
               </div>
@@ -407,6 +557,15 @@ export default function AddVisitModal({
           </div>
         </form>
       </div>
+
+      {/* 圖片編輯器 */}
+      {editingImageFile && (
+        <ImageEditor
+          imageFile={editingImageFile}
+          onSave={handleImageEditSave}
+          onCancel={handleImageEditCancel}
+        />
+      )}
     </div>
   );
 }

@@ -138,8 +138,21 @@ export default function UserPostsPage() {
       });
 
       if (response.ok) {
-        // 重新獲取貼文資料以確保資料一致性
-        fetchUserPosts();
+        // 樂觀更新留言按讚狀態
+        setPosts(prevPosts =>
+          prevPosts.map(post => ({
+            ...post,
+            comments: post.comments?.map(comment =>
+              comment.id === commentId
+                ? {
+                    ...comment,
+                    is_liked: !isCurrentlyLiked,
+                    likes_count: (comment.likes_count || 0) + (isCurrentlyLiked ? -1 : 1),
+                  }
+                : comment
+            )
+          }))
+        );
       }
     } catch (error) {
       console.error("留言按讚失敗:", error);
