@@ -21,7 +21,7 @@ export default function MapViewToggle({
   if (!currentUserEmail) return null;
 
   return (
-    <div className={`absolute right-6 z-10 ${isMobile ? "bottom-20" : "bottom-6"}`}>
+    <div className={`absolute right-6 z-10 ${isMobile ? "bottom-24" : "bottom-6"}`}>
       {/* Tooltip */}
       {hoveredButton && (
         <div className="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded-lg border border-gray-600 shadow-xl whitespace-nowrap">

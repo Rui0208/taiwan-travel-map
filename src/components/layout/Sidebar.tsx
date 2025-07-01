@@ -119,34 +119,7 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
 
   const handleLogout = async () => {
     try {
-      console.log("開始登出...");
-      
-      // 方法1: 嘗試 API 登出
-      try {
-        const apiResponse = await fetch("/api/auth/test-logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-        
-        if (apiResponse.ok) {
-          const result = await apiResponse.json();
-          console.log("API 登出成功:", result);
-          
-          // 清除客戶端狀態
-          if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
-          }
-          
-          // 跳轉到首頁
-          window.location.href = "/pages/home";
-          return;
-        }
-      } catch (apiError) {
-        console.error("API 登出失敗:", apiError);
-      }
-      
-      // 方法2: 使用 NextAuth signOut
+      // 使用 NextAuth signOut
       try {
         console.log("嘗試 NextAuth signOut...");
         await signOut({ 
@@ -169,7 +142,7 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
         console.error("NextAuth 登出失敗:", nextAuthError);
       }
       
-      // 方法3: 強制登出
+      // 備用方案：強制登出
       console.log("使用強制登出方案...");
       if (typeof window !== 'undefined') {
         // 清除所有存儲
@@ -189,7 +162,7 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
       }
       
     } catch (error) {
-      console.error("所有登出方案都失敗:", error);
+      console.error("登出失敗:", error);
       
       // 最終備用方案
       if (typeof window !== 'undefined') {

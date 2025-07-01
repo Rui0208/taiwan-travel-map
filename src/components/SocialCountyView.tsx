@@ -61,7 +61,6 @@ export default function SocialCountyView({
     if (postsData?.data) {
       if (showOnlyMine) {
         // mine 模式：API 已經返回當前用戶的所有文章，需要篩選當前縣市
-        // 產生所有可能的英文名稱（含舊格式）
         const allPossibleEnglishNames = Object.entries(COUNTY_NAMES)
           .filter(([zh]) => zh === countyName)
           .map(([, en]) => en as string)
@@ -70,7 +69,6 @@ export default function SocialCountyView({
               en => COUNTY_NAMES_REVERSE[en] === countyName
             )
           );
-        // 加入常見舊格式（如 "Taitung County"）
         const legacyEnglish = allPossibleEnglishNames.map(name => name + " County");
         const allNames: string[] = [
           ...allPossibleEnglishNames,
@@ -79,20 +77,11 @@ export default function SocialCountyView({
           displayCountyName,
         ];
         
-        console.log("Mine mode filtering:", {
-          countyName,
-          allNames,
-          totalPosts: postsData.data.length,
-          allCounties: postsData.data.map(p => p.county),
-        });
-        
         const filteredData = postsData.data.filter((item) => {
           const matches = allNames.includes(item.county);
-          console.log(`Item ${item.id}: county=${item.county}, matches=${matches}`);
           return matches;
         });
         
-        console.log("Filtered data count:", filteredData.length);
         return filteredData;
       } else {
         // 所有人模式：posts API已經按縣市篩選，直接返回

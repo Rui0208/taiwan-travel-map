@@ -30,7 +30,6 @@ export const endpoints = {
   notifications: {
     list: "/api/v1/social/notifications",
     markRead: "/api/v1/social/notifications",
-    setup: "/api/v1/system/setup-notifications",
   },
   profile: {
     get: "/api/v1/user/profile",

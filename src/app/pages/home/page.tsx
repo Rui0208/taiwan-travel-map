@@ -70,20 +70,16 @@ export default function HomePage() {
             {status === "authenticated" ? (
               <div className="flex items-center justify-center md:justify-end gap-4 md:gap-6 text-gray-400">
                 <div className="flex flex-col items-center gap-1">
-                  <div className="flex flex-col items-center">
-                    <span className="text-base md:text-lg font-bold">
-                      {stats.totalCounties}
-                    </span>
-                    <span className="text-xs md:text-sm">{t("counties")}</span>
-                  </div>
+                  <span className="text-base md:text-lg font-bold">
+                    {stats.totalCounties}
+                  </span>
+                  <span className="text-xs md:text-sm whitespace-nowrap">{t("counties")}</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="flex flex-col items-center">
-                    <span className="text-base md:text-lg font-bold">
-                      {stats.totalPosts}
-                    </span>
-                    <span className="text-xs md:text-sm">{t("posts")}</span>
-                  </div>
+                  <span className="text-base md:text-lg font-bold">
+                    {stats.totalPosts}
+                  </span>
+                  <span className="text-xs md:text-sm whitespace-nowrap">{t("posts")}</span>
                 </div>
               </div>
             ) : (
