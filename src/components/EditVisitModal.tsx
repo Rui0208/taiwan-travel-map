@@ -137,15 +137,7 @@ export default function EditVisitModal({
         return;
       }
 
-      // 檢查檔案大小是否太小（小於 10KB）
-      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
-        const fileSizeKB = (file.size / 1024).toFixed(1);
-        errors.push(t("image_upload_limits.file_too_small", { 
-          filename: file.name, 
-          size: fileSizeKB 
-        }));
-        return;
-      }
+
 
       validFiles.push(file);
       newPreviews.push(URL.createObjectURL(file));
@@ -515,16 +507,6 @@ export default function EditVisitModal({
                           filename: file.name, 
                           size: fileSizeMB, 
                           limit: maxSizeMB 
-                        }));
-                        return;
-                      }
-
-                      // 檢查檔案大小是否太小（小於 10KB）
-                      if (file.size < IMAGE_UPLOAD_LIMITS.MIN_FILE_SIZE) {
-                        const fileSizeKB = (file.size / 1024).toFixed(1);
-                        errors.push(t("image_upload_limits.file_too_small", { 
-                          filename: file.name, 
-                          size: fileSizeKB 
                         }));
                         return;
                       }
