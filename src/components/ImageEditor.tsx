@@ -24,6 +24,10 @@ export default function ImageEditor({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  
+  // 觸控縮放支援
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number } | null>(null);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number>(0);
 
   // 載入圖片
   useEffect(() => {
@@ -124,44 +128,77 @@ export default function ImageEditor({
     setIsDragging(false);
   };
 
+  // 計算兩點之間的距離
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
   // 觸控開始
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    if (e.touches.length === 2) {
+      // 雙指觸控 - 準備縮放
+      const distance = getTouchDistance(e.touches);
+      setTouchStart({ x: 0, y: 0, distance });
+      setLastTouchDistance(distance);
+    } else if (e.touches.length === 1) {
+      // 單指觸控 - 準備拖拽
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
 
-    setIsDragging(true);
-    setDragStart({ x: x - position.x, y: y - position.y });
+      setIsDragging(true);
+      setDragStart({ x: x - position.x, y: y - position.y });
+    }
   };
 
   // 觸控移動
   const handleTouchMove = (e: React.TouchEvent) => {
     e.preventDefault();
-    if (!isDragging) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    if (e.touches.length === 2 && touchStart) {
+      // 雙指觸控 - 縮放
+      const distance = getTouchDistance(e.touches);
+      
+      if (lastTouchDistance > 0) {
+        const scaleDelta = (distance - lastTouchDistance) / 200;
+        const newScale = Math.max(0.5, Math.min(3, scale + scaleDelta));
+        setScale(newScale);
+      }
+      
+      setLastTouchDistance(distance);
+    } else if (e.touches.length === 1 && isDragging) {
+      // 單指觸控 - 拖拽
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
 
-    setPosition({
-      x: x - dragStart.x,
-      y: y - dragStart.y
-    });
+      setPosition({
+        x: x - dragStart.x,
+        y: y - dragStart.y
+      });
+    }
   };
 
   // 觸控結束
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    if (e.touches.length === 0) {
+      // 所有手指都離開，重置狀態
+      setIsDragging(false);
+      setTouchStart(null);
+      setLastTouchDistance(0);
+    }
   };
 
   // 縮放變更
@@ -188,17 +225,17 @@ export default function ImageEditor({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-2xl p-6 max-w-lg w-full mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h3 className="text-lg sm:text-xl font-bold text-white">
             {t("edit_image")}
           </h3>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-400 hover:text-white transition-colors p-1"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -217,11 +254,11 @@ export default function ImageEditor({
         )}
 
         {/* 預覽畫布 */}
-        <div className="flex justify-center mb-6">
-          <div className="relative">
+        <div className="flex justify-center mb-4 sm:mb-6">
+          <div className="relative w-full max-w-xs sm:max-w-sm">
             <canvas
               ref={canvasRef}
-              className="border-2 border-gray-600 rounded-lg cursor-move max-w-full touch-none"
+              className="border-2 border-gray-600 rounded-lg cursor-move w-full h-auto touch-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -237,12 +274,12 @@ export default function ImageEditor({
         </div>
 
         {/* 縮放控制 */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-300">
+            <label className="text-xs sm:text-sm font-medium text-gray-300">
               {t("scale")}
             </label>
-            <span className="text-sm text-gray-400">
+            <span className="text-xs sm:text-sm text-gray-400">
               {Math.round(scale * 100)}%
             </span>
           </div>
@@ -259,18 +296,18 @@ export default function ImageEditor({
         </div>
 
         {/* 操作說明 */}
-        <div className="mb-6 p-3 bg-gray-800 rounded-lg">
-          <p className="text-gray-300 text-sm text-center">
+        <div className="mb-4 sm:mb-6 p-2 sm:p-3 bg-gray-800 rounded-lg">
+          <p className="text-gray-300 text-xs sm:text-sm text-center">
             {t("image_editor_instruction")}
           </p>
         </div>
 
         {/* 按鈕區域 */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             type="button"
             onClick={handleReset}
-            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation"
+            className="flex-1 px-3 sm:px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation text-sm sm:text-base"
             style={{ touchAction: 'manipulation' }}
           >
             {t("reset")}
@@ -278,7 +315,7 @@ export default function ImageEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation"
+            className="flex-1 px-3 sm:px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation text-sm sm:text-base"
             style={{ touchAction: 'manipulation' }}
           >
             {t("cancel")}
@@ -286,7 +323,7 @@ export default function ImageEditor({
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
+            className="flex-1 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors touch-manipulation text-sm sm:text-base"
             style={{ touchAction: 'manipulation' }}
           >
             {t("save")}
