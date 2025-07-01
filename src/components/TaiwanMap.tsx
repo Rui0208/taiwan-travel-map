@@ -421,6 +421,9 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
 
   // 觸控開始
   const handleTouchStart = (event: React.TouchEvent) => {
+    // 阻止預設的觸控行為（如頁面滾動）
+    event.preventDefault();
+    
     if (event.touches.length === 2) {
       // 雙指觸控 - 準備縮放
       const distance = getTouchDistance(event.touches);
@@ -459,7 +462,10 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
   };
 
   // 觸控結束
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    // 阻止預設的觸控行為
+    event.preventDefault();
+    
     setIsDragging(false);
     setTouchStart(null);
     setLastTouchDistance(0);
@@ -510,12 +516,12 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
       )}
 
       {/* 地圖容器 */}
-      <div className="w-full h-full flex items-center justify-center relative">
+      <div className="w-full h-full flex items-center justify-center relative touch-none">
         {isMounted && (
           <svg
             ref={svgRef}
             viewBox="0 0 1000 1400"
-            className="w-full h-full max-w-3xl cursor-grab active:cursor-grabbing"
+            className="w-full h-full max-w-3xl cursor-grab active:cursor-grabbing touch-none"
             xmlns="http://www.w3.org/2000/svg"
             onMouseMove={(event) => {
               handleMouseMove(event);
