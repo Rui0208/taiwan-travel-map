@@ -202,7 +202,7 @@ export default function ProfilePage() {
     <main className="h-full bg-black overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-600">
       <div className="max-w-4xl mx-auto px-3 md:px-4">
         {/* 個人檔案標題欄 */}
-        <div className="py-3 md:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="py-3 md:py-4 flex flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             {!profileData?.isOwnProfile && (
               <button
@@ -223,7 +223,7 @@ export default function ProfilePage() {
           {profileData?.isOwnProfile && (
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 w-3xl md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition-colors flex items-center space-x-2 sm:w-auto justify-center"
             >
               <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />

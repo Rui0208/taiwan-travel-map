@@ -149,8 +149,20 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
   >([]);
   const [visiblePhotos, setVisiblePhotos] = useState<Set<number>>(new Set());
   const [showOnlyMine, setShowOnlyMine] = useState(initialViewMode === 'mine');
+  
+  // 縮放相關狀態
+  const [scale, setScale] = useState(1.25);  // 初始縮放比例
+  const [translateX, setTranslateX] = useState(-100); // 初始水平位置
+  const [translateY, setTranslateY] = useState(-50);  // 初始垂直位置
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
   const svgRef = useRef<SVGSVGElement>(null);
   const { data: session, status } = useSession();
+
+  // 縮放限制
+  const MIN_SCALE = 0.5;
+  const MAX_SCALE = 3;
 
   // 當 initialViewMode 改變時更新 showOnlyMine
   useEffect(() => {
@@ -285,7 +297,7 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
             url,
             x,
             y,
-            delay: index * 150,
+            delay: index * 100,
           });
         });
 
@@ -323,7 +335,31 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
     setVisiblePhotos(new Set());
   };
 
+  // 拖拽開始
+  const handleMouseDown = (event: React.MouseEvent) => {
+    if (event.button === 0) { // 左鍵
+      setIsDragging(true);
+      setDragStart({ x: event.clientX - translateX, y: event.clientY - translateY });
+    }
+  };
+
+  // 拖拽中
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (isDragging) {
+      setTranslateX(event.clientX - dragStart.x);
+      setTranslateY(event.clientY - dragStart.y);
+    }
+  };
+
+  // 拖拽結束
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // 縣市點擊處理（避免拖拽時觸發）
   const handleLocationClick = (event: React.MouseEvent<SVGElement>) => {
+    if (isDragging) return; // 如果正在拖拽，不觸發點擊
+    
     const location = event.currentTarget.getAttribute("name");
     if (location) {
       // location 是英文名稱，需要轉換為中文再轉換為 slug
@@ -336,6 +372,113 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
         router.push(url);
       }
     }
+  };
+
+  // 縮放功能 - 以地圖中心為縮放點
+  const handleZoom = (delta: number) => {
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + delta));
+    
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (rect) {
+      // 以容器中心為縮放點
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      // 計算縮放比例變化
+      const scaleRatio = newScale / scale;
+      
+      // 計算新的位移，保持中心點不變
+      const newTranslateX = centerX - (centerX - translateX) * scaleRatio;
+      const newTranslateY = centerY - (centerY - translateY) * scaleRatio;
+      
+      setScale(newScale);
+      setTranslateX(newTranslateX);
+      setTranslateY(newTranslateY);
+    }
+  };
+
+
+
+  // 觸控縮放支援
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number } | null>(null);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number>(0);
+
+  // 計算兩點之間的距離
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // 計算兩點的中心位置
+  const getTouchCenter = (touches: React.TouchList) => {
+    if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
+    const x = (touches[0].clientX + touches[1].clientX) / 2;
+    const y = (touches[0].clientY + touches[1].clientY) / 2;
+    return { x, y };
+  };
+
+  // 觸控開始
+  const handleTouchStart = (event: React.TouchEvent) => {
+    if (event.touches.length === 2) {
+      // 雙指觸控 - 準備縮放
+      const distance = getTouchDistance(event.touches);
+      const center = getTouchCenter(event.touches);
+      setTouchStart({ x: center.x, y: center.y, distance });
+      setLastTouchDistance(distance);
+    } else if (event.touches.length === 1) {
+      // 單指觸控 - 準備拖拽
+      setIsDragging(true);
+      setDragStart({ 
+        x: event.touches[0].clientX - translateX, 
+        y: event.touches[0].clientY - translateY 
+      });
+    }
+  };
+
+  // 觸控移動
+  const handleTouchMove = (event: React.TouchEvent) => {
+    event.preventDefault();
+    
+    if (event.touches.length === 2 && touchStart) {
+      // 雙指觸控 - 縮放
+      const distance = getTouchDistance(event.touches);
+      
+      if (lastTouchDistance > 0) {
+        const scaleDelta = (distance - lastTouchDistance) / 100;
+        handleZoom(scaleDelta);
+      }
+      
+      setLastTouchDistance(distance);
+    } else if (event.touches.length === 1 && isDragging) {
+      // 單指觸控 - 拖拽
+      setTranslateX(event.touches[0].clientX - dragStart.x);
+      setTranslateY(event.touches[0].clientY - dragStart.y);
+    }
+  };
+
+  // 觸控結束
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setTouchStart(null);
+    setLastTouchDistance(0);
+  };
+
+  // 重置縮放
+  const resetZoom = () => {
+    setScale(1.25);  // 原本的 scale-125
+    setTranslateX(-100); // 原本的 translate-x-[-20%] 約等於 -200px
+    setTranslateY(-50);  // 原本的 translate-y-[-5%] 約等於 -50px
+  };
+
+  // 縮放按鈕
+  const zoomIn = () => {
+    handleZoom(0.2);
+  };
+
+  const zoomOut = () => {
+    handleZoom(-0.2);
   };
 
   if (!isMounted) {
@@ -367,14 +510,25 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
       )}
 
       {/* 地圖容器 */}
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center relative">
         {isMounted && (
           <svg
             ref={svgRef}
             viewBox="0 0 1000 1400"
-            className="w-full h-full max-w-3xl transform scale-125 translate-x-[-10%] translate-y-[-10%]"
+            className="w-full h-full max-w-3xl cursor-grab active:cursor-grabbing"
             xmlns="http://www.w3.org/2000/svg"
-            onMouseMove={handleLocationMouseMove}
+            onMouseMove={(event) => {
+              handleMouseMove(event);
+              handleLocationMouseMove(event);
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+            }}
           >
             {/* 縣市區域 */}
             {taiwan.locations.map((location) => (
@@ -419,6 +573,37 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
             `}</style>
           </svg>
         )}
+
+        {/* 縮放控制按鈕 */}
+        <div className="absolute top-4 right-4 flex flex-col space-y-2">
+          <button
+            onClick={zoomIn}
+            className="w-10 h-10 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center transition-colors"
+            title="放大"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+          <button
+            onClick={zoomOut}
+            className="w-10 h-10 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center transition-colors"
+            title="縮小"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          </button>
+          <button
+            onClick={resetZoom}
+            className="w-10 h-10 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center transition-colors"
+            title="重置"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 懸停時的照片顯示 - 以滑鼠為中心擴散 */}

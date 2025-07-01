@@ -389,9 +389,6 @@ const Sidebar = ({ onDataChange }: SidebarProps) => {
                     </div>
                   )}
                 </div>
-                <span className="text-xs mt-1 font-medium">
-                  {item.label}
-                </span>
               </button>
             ))}
           </div>

@@ -325,26 +325,11 @@ export default function SocialCountyView({
     );
   }
 
-  // 顯示錯誤狀態（開發用）
-  console.log("Social County View Debug:", {
-    postsError,
-    countyName,
-    visitedDataLength: visitedData.length,
-    postsDataExists: !!postsData,
-    postsDataLength: postsData?.data?.length || 0,
-    postsWithSocialDataLength: postsWithSocialData.length,
-    apiEndpoint: showOnlyMine ? endpoints.posts.byUser(currentUserId) : endpoints.posts.byCounty(countyName),
-    postsData: postsData,
-    postsWithSocialData: postsWithSocialData,
-    showOnlyMine,
-    isGuest,
-    currentUserId,
-  });
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col">
+    <div className="flex bg-black/90 backdrop-blur-sm z-50  flex-col">
       {/* 標題列 - 固定在頂部 */}
-      <div className="flex-none z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
+      <div className="flex-none z-10 backdrop-blur-sm border-b border-gray-800">
         <div className="w-full mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
           <div className="flex items-center space-x-3 md:space-x-4">
             <button
@@ -403,8 +388,7 @@ export default function SocialCountyView({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <span className="hidden sm:inline">{t("add_place")}</span>
-              <span className="sm:hidden">新增</span>
+              <span>{t("add_place")}</span>
             </button>
           )}
         </div>

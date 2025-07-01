@@ -59,14 +59,12 @@ export default function HomePage() {
   return (
     <main className="h-full flex flex-col bg-black overflow-hidden">
       {/* 標題欄 */}
-      <div className="flex-none bg-black px-4 md:px-6 py-4">
+      <div className="flex bg-black px-4 md:px-6 py-4">
         <div className="w-full mx-auto">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl md:text-2xl font-bold text-white">
+          <div className="flex justify-between items-center">
+              <h1 className="w-full text-xl md:text-2xl font-bold text-white">
                 {mounted ? t("app.name") : "Taiwan Travel Map"}
               </h1>
-            </div>
             
             {/* 訪客模式或登入使用者的統計 */}
             {status === "authenticated" ? (
@@ -89,16 +87,11 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
-                <div className="text-gray-400 text-sm text-center md:text-left">
+              <div className="flex flex-col items-end gap-3 w-full md:gap-4">
+                <div className="text-gray-400 text-sm text-center md:text-right">
                   {t("welcome_guest")}
                 </div>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors w-full md:w-auto"
-                >
-                  登入
-                </button>
+              
               </div>
             )}
           </div>
