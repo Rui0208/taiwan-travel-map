@@ -296,7 +296,7 @@ export default function SocialPostCard({
         <div className="border-t border-gray-800/50">
           {/* 留言列表 */}
           {post.comments && post.comments.length > 0 && (
-            <div className="px-4 py-3 space-y-3 max-h-80 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-500">
+            <div className="px-4 py-3 space-y-3 max-h-80 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-500 [&::-webkit-scrollbar-thumb]:min-h-8">
               {post.comments.map((comment) => (
                 <div key={comment.id} className="flex space-x-2">
                   {/* 留言者頭像 */}
@@ -360,8 +360,9 @@ export default function SocialPostCard({
                           <textarea
                             value={editingContent}
                             onChange={(e) => setEditingContent(e.target.value)}
-                            className="w-full bg-gray-700 text-white text-sm px-2 py-1 rounded resize-none focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            className="w-full bg-gray-700 text-white text-sm px-2 py-1 rounded resize-none focus:ring-1 focus:ring-blue-500 focus:outline-none max-h-32 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-gray-600 [&::-webkit-scrollbar-thumb]:bg-gray-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400"
                             rows={2}
+                            style={{ minHeight: '2.5rem', maxHeight: '8rem' }}
                           />
                           <div className="flex justify-end space-x-2">
                             <button

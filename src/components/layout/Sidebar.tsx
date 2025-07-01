@@ -4,13 +4,23 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import { usePathname, useRouter } from "next/navigation";
-import AddVisitModal from "@/components/AddVisitModal";
-import LoginModal from "@/components/LoginModal";
+import dynamic from "next/dynamic";
 import {
   changeLanguage,
   getCurrentLanguage,
   type SupportedLanguage,
 } from "@/i18n/utils";
+
+// 動態導入大型模態框組件
+const AddVisitModal = dynamic(() => import("@/components/AddVisitModal"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface SidebarProps {
   onDataChange?: () => void;

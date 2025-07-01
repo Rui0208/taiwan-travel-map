@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "next/navigation";
-import LoginModal from "@/components/LoginModal";
 
 // 動態導入地圖組件以避免 SSR 問題
 const TaiwanMap = dynamic(() => import("@/components/TaiwanMap"), {
@@ -18,6 +17,12 @@ const TaiwanMap = dynamic(() => import("@/components/TaiwanMap"), {
       </div>
     </div>
   ),
+});
+
+// 動態導入登入模態框
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
 });
 
 export default function HomePage() {

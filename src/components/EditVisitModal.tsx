@@ -22,23 +22,28 @@ export default function EditVisitModal({
   const { t } = useTranslation();
   
   // 找出對應的中文縣市名稱
-  const getCountyKey = (englishName: string) => {
-    // 先嘗試直接匹配
-    const entry = Object.entries(COUNTY_NAMES).find(([, value]) => value === englishName);
+  const getCountyKey = (countyName: string) => {
+    // 如果已經是中文名稱，直接返回
+    if (Object.keys(COUNTY_NAMES).includes(countyName)) {
+      return countyName;
+    }
+    
+    // 如果是英文名稱，查找對應的中文名稱
+    const entry = Object.entries(COUNTY_NAMES).find(([, value]) => value === countyName);
     if (entry) return entry[0];
     
     // 如果沒有找到，嘗試移除 " County" 後綴
-    const nameWithoutCounty = englishName.replace(/\s+County$/, '');
+    const nameWithoutCounty = countyName.replace(/\s+County$/, '');
     const entryWithoutCounty = Object.entries(COUNTY_NAMES).find(([, value]) => value === nameWithoutCounty);
     if (entryWithoutCounty) return entryWithoutCounty[0];
     
     // 如果還是沒有找到，嘗試移除 " City" 後綴
-    const nameWithoutCity = englishName.replace(/\s+City$/, '');
+    const nameWithoutCity = countyName.replace(/\s+City$/, '');
     const entryWithoutCity = Object.entries(COUNTY_NAMES).find(([, value]) => value === nameWithoutCity);
     if (entryWithoutCity) return entryWithoutCity[0];
     
     // 如果都沒有找到，預設為臺北
-    console.warn(`無法找到縣市名稱對應: ${englishName}`);
+    console.warn(`無法找到縣市名稱對應: ${countyName}`);
     return "臺北";
   };
 

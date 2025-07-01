@@ -5,9 +5,19 @@ import { useSession } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { VisitedPlace } from "@/api/types";
-import EditProfileModal from "@/components/EditProfileModal";
-import LoginModal from "@/components/LoginModal";
+
+// 動態導入大型模態框組件
+const EditProfileModal = dynamic(() => import("@/components/EditProfileModal"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface UserStats {
   totalPosts: number;

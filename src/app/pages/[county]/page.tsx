@@ -5,15 +5,39 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
 import useSWR from "swr";
+import dynamic from "next/dynamic";
 
 import { endpoints } from "@/api/endpoints";
 import { fetcher } from "@/api/fetcher";
 import { type VisitedPlace, type ApiResponse } from "@/api/types";
 import { slugToCounty } from "@/lib/utils";
-import SocialCountyView from "@/components/SocialCountyView";
-import EditVisitModal from "@/components/EditVisitModal";
-import AddVisitModal from "@/components/AddVisitModal";
-import LoginModal from "@/components/LoginModal";
+
+// 動態導入大型組件
+const SocialCountyView = dynamic(() => import("@/components/SocialCountyView"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+      <div className="h-32 bg-gray-200 rounded mb-4"></div>
+      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    </div>
+  ),
+});
+
+const EditVisitModal = dynamic(() => import("@/components/EditVisitModal"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const AddVisitModal = dynamic(() => import("@/components/AddVisitModal"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
+});
 
 // 資料庫縣市名稱對應表（支援舊格式和新格式）
 const DB_COUNTY_MAP: Record<string, string> = {
@@ -226,7 +250,7 @@ export default function CountyPage() {
   }
 
   return (
-    <main className="h-full bg-black overflow-hidden">
+    <main className="min-h-screen bg-black">
       {/* 社交風格縣市詳細資訊 */}
       <SocialCountyView
         countyName={countyName}

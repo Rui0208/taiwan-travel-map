@@ -5,9 +5,15 @@ import { useSession } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import LoginModal from "@/components/LoginModal";
+import dynamic from "next/dynamic";
 import { Notification } from "@/api/types";
 import { generateNotificationDisplayContent } from "@/lib/notification-utils";
+
+// 動態導入登入模態框
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface NotificationResponse {
   success: boolean;
@@ -228,8 +234,6 @@ export default function NotificationsPage() {
       fetchNotifications();
     }
   }, [status]);
-
-
 
   if (status === "loading" || !mounted) {
     return (

@@ -5,12 +5,32 @@ import { useSession } from "next-auth/react";
 import { useTranslation } from "react-i18next";
 import { useRouter, useParams } from "next/navigation";
 import useSWR from "swr";
+import dynamic from "next/dynamic";
 import { PostWithDetails } from "@/api/types";
 import { endpoints } from "@/api/endpoints";
 import { fetcher } from "@/api/fetcher";
-import SocialPostCard from "@/components/SocialPostCard";
-import EditVisitModal from "@/components/EditVisitModal";
-import LoginModal from "@/components/LoginModal";
+
+// 動態導入大型組件
+const SocialPostCard = dynamic(() => import("@/components/SocialPostCard"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+      <div className="h-48 bg-gray-200 rounded mb-4"></div>
+      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+    </div>
+  ),
+});
+
+const EditVisitModal = dynamic(() => import("@/components/EditVisitModal"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const LoginModal = dynamic(() => import("@/components/LoginModal"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function PostPage() {
   const { data: session, status } = useSession();

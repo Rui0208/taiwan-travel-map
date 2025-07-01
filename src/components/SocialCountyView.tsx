@@ -316,7 +316,7 @@ export default function SocialCountyView({
 
 
   return (
-    <div className="flex bg-black/90 backdrop-blur-sm z-50  flex-col">
+    <div className="flex bg-black/90 backdrop-blur-sm z-50 flex-col min-h-screen">
       {/* 標題列 - 固定在頂部 */}
       <div className="flex-none z-10 backdrop-blur-sm border-b border-gray-800">
         <div className="w-full mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
@@ -383,9 +383,9 @@ export default function SocialCountyView({
         </div>
       </div>
 
-      {/* 主要內容區域 - 直式單欄佈局 */}
+      {/* 主要內容區域 - 允許自然延展 */}
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-600">
-        <div className="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-6 pb-20">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-6 pb-20 min-h-full">
           {postsWithSocialData.length > 0 ? (
             <div className="space-y-4 md:space-y-6">
               {postsWithSocialData.map((post: PostWithDetails) => (
