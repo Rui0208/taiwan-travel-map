@@ -357,7 +357,7 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
   };
 
   // 縣市點擊處理（避免拖拽時觸發）
-  const handleLocationClick = (event: React.MouseEvent<SVGElement>) => {
+  const handleLocationClick = (event: React.MouseEvent<SVGElement> | React.TouchEvent<SVGElement>) => {
     if (isDragging) return; // 如果正在拖拽，不觸發點擊
     
     const location = event.currentTarget.getAttribute("name");
@@ -397,8 +397,6 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
     }
   };
 
-
-
   // 觸控縮放支援
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number } | null>(null);
   const [lastTouchDistance, setLastTouchDistance] = useState<number>(0);
@@ -421,31 +419,22 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
 
   // 觸控開始
   const handleTouchStart = (event: React.TouchEvent) => {
-    // 阻止預設的觸控行為（如頁面滾動）
-    event.preventDefault();
-    
     if (event.touches.length === 2) {
-      // 雙指觸控 - 準備縮放
+      // 雙指觸控 - 準備縮放，阻止預設行為
+      event.preventDefault();
       const distance = getTouchDistance(event.touches);
       const center = getTouchCenter(event.touches);
       setTouchStart({ x: center.x, y: center.y, distance });
       setLastTouchDistance(distance);
-    } else if (event.touches.length === 1) {
-      // 單指觸控 - 準備拖拽
-      setIsDragging(true);
-      setDragStart({ 
-        x: event.touches[0].clientX - translateX, 
-        y: event.touches[0].clientY - translateY 
-      });
     }
+    // 單指觸控不阻止預設行為，讓點擊事件正常工作
   };
 
   // 觸控移動
   const handleTouchMove = (event: React.TouchEvent) => {
-    event.preventDefault();
-    
     if (event.touches.length === 2 && touchStart) {
-      // 雙指觸控 - 縮放
+      // 雙指觸控 - 縮放，阻止預設行為
+      event.preventDefault();
       const distance = getTouchDistance(event.touches);
       
       if (lastTouchDistance > 0) {
@@ -454,21 +443,17 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
       }
       
       setLastTouchDistance(distance);
-    } else if (event.touches.length === 1 && isDragging) {
-      // 單指觸控 - 拖拽
-      setTranslateX(event.touches[0].clientX - dragStart.x);
-      setTranslateY(event.touches[0].clientY - dragStart.y);
     }
+    // 單指觸控移動不阻止預設行為
   };
 
   // 觸控結束
   const handleTouchEnd = (event: React.TouchEvent) => {
-    // 阻止預設的觸控行為
-    event.preventDefault();
-    
-    setIsDragging(false);
-    setTouchStart(null);
-    setLastTouchDistance(0);
+    if (event.touches.length === 0) {
+      // 所有手指都離開，重置狀態
+      setTouchStart(null);
+      setLastTouchDistance(0);
+    }
   };
 
   // 重置縮放
@@ -534,6 +519,7 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
             onTouchEnd={handleTouchEnd}
             style={{
               transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+              touchAction: 'none', // 防止瀏覽器預設的觸控行為
             }}
           >
             {/* 縣市區域 */}
