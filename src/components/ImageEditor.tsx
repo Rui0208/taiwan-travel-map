@@ -124,6 +124,46 @@ export default function ImageEditor({
     setIsDragging(false);
   };
 
+  // 觸控開始
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    setIsDragging(true);
+    setDragStart({ x: x - position.x, y: y - position.y });
+  };
+
+  // 觸控移動
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (!isDragging) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    setPosition({
+      x: x - dragStart.x,
+      y: y - dragStart.y
+    });
+  };
+
+  // 觸控結束
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
   // 縮放變更
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setScale(parseFloat(e.target.value));
@@ -181,11 +221,14 @@ export default function ImageEditor({
           <div className="relative">
             <canvas
               ref={canvasRef}
-              className="border-2 border-gray-600 rounded-lg cursor-move max-w-full"
+              className="border-2 border-gray-600 rounded-lg cursor-move max-w-full touch-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             />
             <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
               {imageSize.width} × {imageSize.height}
@@ -210,7 +253,8 @@ export default function ImageEditor({
             step="0.1"
             value={scale}
             onChange={handleScaleChange}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider touch-manipulation"
+            style={{ touchAction: 'manipulation' }}
           />
         </div>
 
@@ -226,21 +270,24 @@ export default function ImageEditor({
           <button
             type="button"
             onClick={handleReset}
-            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation"
+            style={{ touchAction: 'manipulation' }}
           >
             {t("reset")}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex-1 px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors touch-manipulation"
+            style={{ touchAction: 'manipulation' }}
           >
             {t("cancel")}
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
+            style={{ touchAction: 'manipulation' }}
           >
             {t("save")}
           </button>
