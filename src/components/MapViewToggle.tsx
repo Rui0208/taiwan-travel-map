@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 interface MapViewToggleProps {
   showOnlyMine: boolean;
   onToggle: (showOnlyMine: boolean) => void;
@@ -16,12 +16,12 @@ export default function MapViewToggle({
 }: MapViewToggleProps) {
   const { t } = useTranslation();
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
-
+  const isMobile = useIsMobile();
   // 只有登入用戶才顯示視圖切換
   if (!currentUserEmail) return null;
 
   return (
-    <div className="absolute bottom-6 right-6 z-10">
+    <div className={`absolute right-6 z-10 ${isMobile ? "bottom-20" : "bottom-6"}`}>
       {/* Tooltip */}
       {hoveredButton && (
         <div className="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded-lg border border-gray-600 shadow-xl whitespace-nowrap">
