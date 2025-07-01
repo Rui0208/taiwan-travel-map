@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { COUNTY_NAMES, VisitedPlace } from "@/api/types";
 import { IMAGE_UPLOAD_LIMITS } from "@/lib/constants";
+import ImageEditor from "./ImageEditor";
 
 interface EditVisitModalProps {
   isOpen: boolean;
@@ -59,6 +60,11 @@ export default function EditVisitModal({
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // 圖片編輯相關狀態
+  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
+  const [editingImageFile, setEditingImageFile] = useState<File | null>(null);
+  const [editingImageType, setEditingImageType] = useState<'new' | 'existing'>('new');
 
   // 初始化現有圖片
   useEffect(() => {
@@ -176,6 +182,72 @@ export default function EditVisitModal({
 
   const handleRestoreExistingImage = (imageUrl: string) => {
     setRemovedImages(prev => prev.filter(url => url !== imageUrl));
+  };
+
+  // 編輯新圖片
+  const handleEditNewImage = (index: number) => {
+    setEditingImageIndex(index);
+    setEditingImageFile(imageFiles[index]);
+    setEditingImageType('new');
+  };
+
+  // 編輯現有圖片（需要先下載）
+  const handleEditExistingImage = async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `existing_${index}.jpg`, { type: 'image/jpeg' });
+      
+      setEditingImageIndex(index);
+      setEditingImageFile(file);
+      setEditingImageType('existing');
+    } catch (error) {
+      console.error('下載圖片失敗:', error);
+      setError(t("error"));
+    }
+  };
+
+  // 處理圖片編輯儲存
+  const handleImageEditSave = (editedImage: Blob) => {
+    if (editingImageIndex === null) return;
+
+    if (editingImageType === 'new') {
+      // 編輯新圖片
+      const editedFile = new File([editedImage], `edited_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      // 更新檔案和預覽
+      const newImageFiles = [...imageFiles];
+      newImageFiles[editingImageIndex] = editedFile;
+      setImageFiles(newImageFiles);
+
+      // 更新預覽
+      const newPreviews = [...imagePreviews];
+      newPreviews[editingImageIndex] = URL.createObjectURL(editedFile);
+      setImagePreviews(newPreviews);
+    } else {
+      // 編輯現有圖片 - 將編輯後的圖片轉換為新檔案
+      const editedFile = new File([editedImage], `edited_existing_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      // 移除原始圖片並添加編輯後的圖片
+      const originalImageUrl = existingImages[editingImageIndex];
+      setRemovedImages(prev => [...prev, originalImageUrl]);
+      
+      // 添加編輯後的圖片到新圖片列表
+      setImageFiles(prev => [...prev, editedFile]);
+      setImagePreviews(prev => [...prev, URL.createObjectURL(editedFile)]);
+    }
+
+    // 清理編輯狀態
+    setEditingImageIndex(null);
+    setEditingImageFile(null);
+    setEditingImageType('new');
+  };
+
+  // 處理圖片編輯取消
+  const handleImageEditCancel = () => {
+    setEditingImageIndex(null);
+    setEditingImageFile(null);
+    setEditingImageType('new');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -425,14 +497,28 @@ export default function EditVisitModal({
                             </svg>
                           </button>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExistingImage(imageUrl)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 text-xs"
-                            title="移除圖片"
-                          >
-                            ×
-                          </button>
+                          <>
+                            {/* 編輯按鈕 */}
+                            <button
+                              type="button"
+                              onClick={() => handleEditExistingImage(imageUrl, index)}
+                              className="absolute top-2 left-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 text-xs opacity-80 hover:opacity-100 transition-opacity z-10"
+                              title="編輯圖片"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            {/* 移除按鈕 */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingImage(imageUrl)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 text-xs"
+                              title="移除圖片"
+                            >
+                              ×
+                            </button>
+                          </>
                         )}
                       </div>
                     ))}
@@ -453,6 +539,18 @@ export default function EditVisitModal({
                           fill
                           className="object-contain bg-gray-800 rounded-lg"
                         />
+                        {/* 編輯按鈕 */}
+                        <button
+                          type="button"
+                          onClick={() => handleEditNewImage(index)}
+                          className="absolute top-2 left-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 text-xs opacity-80 hover:opacity-100 transition-opacity z-10"
+                          title="編輯圖片"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        {/* 移除按鈕 */}
                         <button
                           type="button"
                           onClick={() => handleRemoveNewImage(index)}
@@ -678,6 +776,15 @@ export default function EditVisitModal({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 圖片編輯器 */}
+      {editingImageFile && (
+        <ImageEditor
+          imageFile={editingImageFile}
+          onSave={handleImageEditSave}
+          onCancel={handleImageEditCancel}
+        />
       )}
     </div>
   );
