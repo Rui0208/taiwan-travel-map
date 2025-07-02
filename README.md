@@ -27,6 +27,7 @@
 - **ESLint** - 程式碼品質檢查
 - **PostCSS** - CSS 後處理
 - **Vercel** - 生產環境部署
+- **GitHub Actions** - CI/CD 自動化流程
 
 ## 📁 核心檔案結構與技術實作
 
@@ -675,6 +676,82 @@ const handleApiError = (error: unknown) => {
 1. **GitHub Actions**: 自動測試與建置
 2. **Vercel**: 自動部署到生產環境
 3. **環境檢查**: 部署前環境變數驗證
+
+## 🚀 CI/CD 流程
+
+### GitHub Actions 自動化流程
+
+專案已配置完整的 CI/CD 流程，透過 GitHub Actions 自動化執行：
+
+#### **觸發條件**
+- 推送到 `main` 或 `develop` 分支
+- 建立 Pull Request 到 `main` 分支
+
+#### **執行作業**
+
+1. **程式碼品質檢查** (`quality-check`)
+   - 安裝依賴套件
+   - 執行 ESLint 程式碼檢查
+   - TypeScript 型別檢查
+   - Next.js 建置測試
+
+2. **安全性檢查** (`security-check`)
+   - 依賴套件安全性審計
+   - 檢查過期套件
+
+#### **工作流程檔案**
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-check:
+    # 程式碼品質檢查和建置
+  security-check:
+    # 安全性檢查
+```
+
+#### **環境變數設定**
+在 GitHub 倉庫的 Settings > Secrets and variables > Actions 中設定：
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase 專案 URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase 匿名金鑰
+
+#### **部署流程**
+- **Vercel 自動部署**：推送到 `main` 分支時自動部署到生產環境
+- **預覽部署**：建立 PR 時自動建立預覽環境
+
+### 開發工作流程
+
+1. **功能開發**
+   ```bash
+   git checkout -b feature/new-feature
+   # 開發功能
+   git add .
+   git commit -m "feat: 新增功能"
+   git push origin feature/new-feature
+   ```
+
+2. **建立 Pull Request**
+   - 在 GitHub 建立 PR
+   - CI/CD 自動執行檢查
+   - 通過檢查後合併到 main 分支
+
+3. **自動部署**
+   - 合併到 main 分支後自動部署到 Vercel
+   - 部署完成後可立即訪問生產環境
+
+### 品質保證
+
+- **程式碼品質**：ESLint + TypeScript 檢查
+- **建置測試**：每次提交都會測試建置是否成功
+- **安全性**：定期檢查依賴套件安全性
+- **自動化**：減少人為錯誤，提升開發效率
 
 ## 📊 專案統計
 

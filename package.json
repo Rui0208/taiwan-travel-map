@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "type-check": "tsc --noEmit",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@amap/amap-react": "^0.1.5",
@@ -45,6 +50,10 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -52,9 +61,13 @@
     "autoprefixer": "10.4.14",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "8.4.31",
     "tailwindcss": "3.3.0",
     "tsx": "^4.19.4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  },
+  "type": "module"
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react'
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import "@svg-maps/taiwan";
 import taiwan from "@svg-maps/taiwan";
