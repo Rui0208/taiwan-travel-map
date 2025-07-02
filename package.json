@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "test:ui": "vitest --ui"
   },
@@ -58,6 +58,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/topojson-client": "^3.1.5",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "10.4.14",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
