@@ -24,7 +24,7 @@ export default function ImageEditor({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  
+
   // 觸控縮放支援
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number } | null>(null);
   const [lastTouchDistance, setLastTouchDistance] = useState<number>(0);

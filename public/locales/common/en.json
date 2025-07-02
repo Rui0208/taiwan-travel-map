@@ -51,6 +51,14 @@
   "delete_confirm_title": "Delete Place",
   "delete_confirm_message": "Are you sure you want to delete this place? This action cannot be undone.",
   "delete_confirm_message_with_title": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+  "delete_comment_title": "Delete Comment",
+  "delete_comment_message": "Are you sure you want to delete this comment? This action cannot be undone.",
+  "delete_notification_title": "Delete Notification",
+  "delete_notification_message": "Are you sure you want to delete this notification?",
+  "delete_post_title": "Delete Post",
+  "delete_post_message": "Are you sure you want to delete this post? This action cannot be undone.",
+  "delete_visit_title": "Delete Visit Record",
+  "delete_visit_message": "Are you sure you want to delete this visit record? This action cannot be undone.",
   "delete_success": "Place deleted successfully",
   "add_success": "Place added successfully",
   "edit_success": "Place updated successfully",
@@ -119,7 +127,9 @@
     "loading_more": "Loading...",
     "liked_your_post": "liked your post",
     "liked_your_comment": "liked your comment",
-    "commented_your_post": "commented on your post"
+    "commented_your_post": "commented on your post",
+    "delete_notification": "Delete notification",
+    "swipe_left_to_delete": "Swipe left to delete"
   },
   "profile": {
     "posts": "Posts",
@@ -306,5 +316,8 @@
     "file_too_large": "File {{filename}} is too large ({{size}}MB), exceeds {{limit}}MB limit",
     "file_too_small": "File {{filename}} is too small ({{size}}KB), minimum 10KB required",
     "invalid_format": "File {{filename}} format not supported, please upload image files"
-  }
+  },
+  "drag_to_reorder": "Drag to reorder",
+  "tap_to_edit": "Tap to edit",
+  "removed_images": "Removed images"
 }

@@ -129,6 +129,46 @@ export default function AvatarEditor({
     setIsDragging(false);
   };
 
+  // 觸控開始
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault(); // 防止網頁縮放
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    setIsDragging(true);
+    setDragStart({ x: x - position.x, y: y - position.y });
+  };
+
+  // 觸控移動
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // 防止網頁縮放
+    if (!isDragging) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    setPosition({
+      x: x - dragStart.x,
+      y: y - dragStart.y
+    });
+  };
+
+  // 觸控結束
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault(); // 防止網頁縮放
+    setIsDragging(false);
+  };
+
   // 縮放變更
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setScale(parseFloat(e.target.value));
@@ -175,11 +215,15 @@ export default function AvatarEditor({
         <div className="flex justify-center mb-6">
           <canvas
             ref={canvasRef}
-            className="border-2 border-gray-600 rounded-full cursor-move"
+            className="border-2 border-gray-600 rounded-full cursor-move touch-none"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'none' }}
           />
         </div>
 

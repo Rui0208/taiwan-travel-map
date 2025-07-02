@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { type VisitedPlace, type PostWithDetails, COUNTY_NAMES, COUNTY_NAMES_REVERSE } from "@/api/types";
@@ -14,7 +14,6 @@ interface SocialCountyViewProps {
   onClose: () => void;
   onEdit: (id: string) => void;
   onAdd: () => void;
-  onRefresh: () => void;
   currentUserId?: string;
   isGuest?: boolean;
   onGuestInteraction?: () => void;
@@ -27,7 +26,6 @@ export default function SocialCountyView({
   onClose,
   onEdit,
   onAdd,
-  onRefresh,
   currentUserId,
   isGuest = false,
   onGuestInteraction,
@@ -148,6 +146,11 @@ export default function SocialCountyView({
 
         if (!response.ok) {
           const error = await response.json();
+          // 如果是 409，代表已經按過讚，不用報錯
+          if (response.status === 409) {
+            // 可以選擇忽略或顯示「已經按過讚」
+            return;
+          }
           throw new Error(error.error || "取消按讚失敗");
         }
       } else {
@@ -160,12 +163,18 @@ export default function SocialCountyView({
 
         if (!response.ok) {
           const error = await response.json();
+          // 如果是 409，代表已經按過讚，不用報錯
+          if (response.status === 409) {
+            // 可以選擇忽略或顯示「已經按過讚」
+            return;
+          }
           throw new Error(error.error || "按讚失敗");
         }
       }
 
-      // 通知父組件更新
-      onRefresh();
+      // 只在成功後通知父組件更新，避免重複呼叫
+      // 移除 onRefresh() 呼叫，因為樂觀更新已經處理了 UI 更新
+      // onRefresh();
     } catch (error) {
       console.error("按讚操作失敗:", error);
       alert(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
@@ -199,7 +208,8 @@ export default function SocialCountyView({
 
       // 重新獲取資料以包含新的留言
       await mutatePosts();
-      onRefresh();
+      // 移除 onRefresh() 呼叫，避免重複更新
+      // onRefresh();
     } catch (error) {
       console.error("留言失敗:", error);
       alert(`留言失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
@@ -254,7 +264,8 @@ export default function SocialCountyView({
 
       // 重新獲取資料
       await mutatePosts();
-      onRefresh();
+      // 移除 onRefresh() 呼叫，避免重複更新
+      // onRefresh();
     } catch (error) {
       console.error("留言按讚操作失敗:", error);
       alert(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
@@ -274,9 +285,8 @@ export default function SocialCountyView({
         throw new Error(error.error || "編輯留言失敗");
       }
 
-      // 重新獲取資料
+      // 只更新該 post，不全頁重抓
       await mutatePosts();
-      onRefresh();
     } catch (error) {
       console.error("編輯留言失敗:", error);
       alert(`編輯失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
@@ -294,9 +304,8 @@ export default function SocialCountyView({
         throw new Error(error.error || "刪除留言失敗");
       }
 
-      // 重新獲取資料
+      // 只更新該 post，不全頁重抓
       await mutatePosts();
-      onRefresh();
     } catch (error) {
       console.error("刪除留言失敗:", error);
       alert(`刪除失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
@@ -396,8 +405,8 @@ export default function SocialCountyView({
                   onLike={handleLike}
                   onComment={handleComment}
                   onCommentLike={handleCommentLike}
-                  onCommentEdit={handleCommentEdit}
-                  onCommentDelete={handleCommentDelete}
+                  onCommentEdit={(commentId, newContent) => handleCommentEdit(commentId, newContent)}
+                  onCommentDelete={(commentId) => handleCommentDelete(commentId)}
                   onEdit={onEdit}
                   isGuest={isGuest}
                 />

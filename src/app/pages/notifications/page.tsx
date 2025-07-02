@@ -8,6 +8,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Notification } from "@/api/types";
 import { generateNotificationDisplayContent } from "@/lib/notification-utils";
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 
 // 動態導入登入模態框
 const LoginModal = dynamic(() => import("@/components/LoginModal"), {
@@ -40,6 +41,8 @@ export default function NotificationsPage() {
   const [mounted, setMounted] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [swipeStates, setSwipeStates] = useState<{ [key: string]: { startX: number; deltaX: number; swiping: boolean } }>({});
 
   useEffect(() => {
     setMounted(true);
@@ -146,6 +149,84 @@ export default function NotificationsPage() {
     } finally {
       setMarkingAllRead(false);
     }
+  };
+
+  // 刪除單個通知
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const response = await fetch("/api/v1/social/notifications", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notificationIds: [notificationId],
+        }),
+      });
+
+      if (response.ok) {
+        setNotifications(prev =>
+          prev.filter(notification => notification.id !== notificationId)
+        );
+        
+        // 如果刪除的是未讀通知，更新未讀數量
+        const deletedNotification = notifications.find(n => n.id === notificationId);
+        if (deletedNotification && !deletedNotification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+          window.dispatchEvent(new CustomEvent('notificationRead'));
+        }
+      }
+    } catch (error) {
+      console.error("刪除通知失敗:", error);
+    }
+  };
+
+  // 處理觸控開始
+  const handleTouchStart = (e: React.TouchEvent, notificationId: string) => {
+    const touch = e.touches[0];
+    setSwipeStates(prev => ({
+      ...prev,
+      [notificationId]: {
+        startX: touch.clientX,
+        deltaX: 0,
+        swiping: false,
+      }
+    }));
+  };
+
+  // 處理觸控移動
+  const handleTouchMove = (e: React.TouchEvent, notificationId: string) => {
+    const touch = e.touches[0];
+    const swipeState = swipeStates[notificationId];
+    
+    if (swipeState) {
+      const deltaX = touch.clientX - swipeState.startX;
+      setSwipeStates(prev => ({
+        ...prev,
+        [notificationId]: {
+          ...swipeState,
+          deltaX,
+          swiping: Math.abs(deltaX) > 10,
+        }
+      }));
+    }
+  };
+
+  // 處理觸控結束
+  const handleTouchEnd = (notificationId: string) => {
+    const swipeState = swipeStates[notificationId];
+    
+    if (swipeState && swipeState.deltaX < -100) {
+      // 左滑超過 100px，刪除通知
+      deleteNotification(notificationId);
+    }
+    
+    // 重置滑動狀態
+    setSwipeStates(prev => {
+      const newStates = { ...prev };
+      delete newStates[notificationId];
+      return newStates;
+    });
   };
 
   // 處理通知點擊
@@ -325,15 +406,37 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {notifications.map((notification) => (
+              {notifications.map((notification) => {
+                const swipeState = swipeStates[notification.id];
+                const transform = swipeState ? `translateX(${Math.min(0, swipeState.deltaX)}px)` : 'translateX(0px)';
+                const showDeleteButton = swipeState && swipeState.deltaX < -50;
+                
+                return (
                 <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-800/50 ${
+                    className="relative overflow-hidden rounded-xl"
+                  >
+                    {/* 背景刪除按鈕（手機左滑時顯示） */}
+                    {isMobile && showDeleteButton && (
+                      <div className="absolute inset-y-0 right-0 flex items-center justify-center bg-red-600 px-6">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </div>
+                    )}
+                    
+                    {/* 通知內容 */}
+                    <div
+                      style={{ transform }}
+                      className={`group p-4 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-800/50 ${
                     !notification.is_read 
                       ? "bg-gray-800/30 border border-blue-500/30" 
                       : "bg-gray-900/30"
-                  }`}
+                      } ${swipeState?.swiping ? 'transition-none' : ''}`}
+                      onClick={() => !swipeState?.swiping && handleNotificationClick(notification)}
+                      onTouchStart={isMobile ? (e) => handleTouchStart(e, notification.id) : undefined}
+                      onTouchMove={isMobile ? (e) => handleTouchMove(e, notification.id) : undefined}
+                      onTouchEnd={isMobile ? () => handleTouchEnd(notification.id) : undefined}
                 >
                   <div className="flex items-start space-x-3">
                     {/* 通知圖標 */}
@@ -356,6 +459,22 @@ export default function NotificationsPage() {
                       </p>
                     </div>
 
+                        {/* 電腦版刪除按鈕 */}
+                        {!isMobile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg"
+                            title={t("delete")}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+
                     {/* 相關圖片 */}
                     {notification.post?.image_urls?.[0] && (
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
@@ -370,7 +489,9 @@ export default function NotificationsPage() {
                     )}
                   </div>
                 </div>
-              ))}
+                  </div>
+                );
+              })}
 
               {/* 載入更多按鈕 */}
               {hasMore && (

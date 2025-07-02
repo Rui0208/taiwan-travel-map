@@ -22,6 +22,41 @@ export async function createNotification(
       return { success: false, reason: 'self_action' };
     }
 
+    // 檢查是否已存在相同的通知（避免重複）
+    // 檢查最近 1 小時內是否有相同的通知
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    console.log("檢查重複通知:", { targetUserId, actorId, type, postId, commentId, oneHourAgo });
+    
+    const { data: existingNotifications, error: checkError } = await supabase
+      .from("notifications")
+      .select("id, created_at")
+      .eq("user_id", targetUserId)
+      .eq("actor_id", actorId)
+      .eq("type", type)
+      .eq("post_id", postId || null)
+      .eq("comment_id", commentId || null)
+      .gte("created_at", oneHourAgo);
+
+    if (checkError) {
+      console.error("檢查重複通知時發生錯誤:", checkError);
+    }
+
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log("發現重複通知，跳過建立:", { 
+        targetUserId, 
+        actorId, 
+        type, 
+        postId, 
+        commentId,
+        existingCount: existingNotifications.length,
+        existingNotifications 
+      });
+      return { success: false, reason: 'duplicate_notification' };
+    }
+
+    console.log("沒有發現重複通知，繼續建立新通知");
+
     // 獲取按讚者/留言者的顯示名稱
     let actorName = "用戶";
     
@@ -65,6 +100,12 @@ export async function createNotification(
       actor_name: actorName, // 儲存演員名稱
       is_read: false,
     };
+
+    console.log('準備 insert notificationData:', {
+      isArray: Array.isArray(notificationData),
+      data: notificationData,
+      type: typeof notificationData
+    });
 
     const { error } = await supabase
       .from("notifications")

@@ -488,8 +488,8 @@ const TaiwanMap = ({ onDataChange, onStatsChange, initialViewMode = 'all' }: Tai
   const handleTouchEnd = (event: React.TouchEvent) => {
     if (event.touches.length === 0) {
       // 所有手指都離開，重置狀態
-      setTouchStart(null);
-      setLastTouchDistance(0);
+    setTouchStart(null);
+    setLastTouchDistance(0);
       setIsDragging(false);
     }
   };

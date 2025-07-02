@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type VisitedPlace, type Comment, COUNTY_NAMES_REVERSE } from "@/api/types";
 import ImageCarousel from "./ImageCarousel";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 interface SocialPostCardProps {
   post: VisitedPlace & {
@@ -17,8 +18,8 @@ interface SocialPostCardProps {
   onLike: (postId: string) => void;
   onComment: (postId: string, content: string) => void;
   onCommentLike: (commentId: string) => void;
-  onCommentEdit: (commentId: string, newContent: string) => void;
-  onCommentDelete: (commentId: string) => void;
+  onCommentEdit: (commentId: string, newContent: string, postId: string) => void;
+  onCommentDelete: (commentId: string, postId: string) => void;
   onEdit: (postId: string) => void;
   isGuest?: boolean;
 }
@@ -41,6 +42,10 @@ export default function SocialPostCard({
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   // 取得縣市顯示名稱的函數
   const getCountyDisplayName = (county: string) => {
@@ -75,8 +80,17 @@ export default function SocialPostCard({
   };
 
   // 處理按讚
-  const handleLike = () => {
-    onLike(post.id);
+  const handleLike = async () => {
+    if (isLiking) return; // 防止重複點擊
+    
+    setIsLiking(true);
+    try {
+      await onLike(post.id);
+    } catch (error) {
+      console.error("按讚失敗:", error);
+    } finally {
+      setIsLiking(false);
+    }
   };
 
   // 處理留言提交
@@ -107,7 +121,7 @@ export default function SocialPostCard({
     if (!editingContent.trim()) return;
     
     try {
-      await onCommentEdit(commentId, editingContent.trim());
+      await onCommentEdit(commentId, editingContent.trim(), post.id);
       setEditingCommentId(null);
       setEditingContent("");
     } catch (error) {
@@ -117,13 +131,22 @@ export default function SocialPostCard({
 
   // 處理刪除留言
   const handleDeleteComment = async (commentId: string) => {
-    if (confirm(t("confirm_delete"))) {
+    setIsDeleting(true);
       try {
-        await onCommentDelete(commentId);
+        await onCommentDelete(commentId, post.id);
+      setIsDeleteConfirmOpen(false);
+      setDeletingCommentId(null);
       } catch (error) {
         console.error("刪除留言失敗:", error);
-      }
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // 打開刪除確認Modal
+  const openDeleteConfirm = (commentId: string) => {
+    setDeletingCommentId(commentId);
+    setIsDeleteConfirmOpen(true);
   };
 
   // 處理點擊用戶名稱
@@ -247,15 +270,15 @@ export default function SocialPostCard({
           {/* 按讚按鈕 */}
           <button
             onClick={handleLike}
-            disabled={isGuest}
+            disabled={isGuest || isLiking}
             className={`flex items-center space-x-1 transition-colors ${
-              isGuest 
+              isGuest || isLiking
                 ? "text-gray-500 cursor-not-allowed" 
                 : post.is_liked 
                   ? "text-red-500 hover:text-red-400" 
                   : "text-gray-400 hover:text-red-500"
             }`}
-            title={isGuest ? "請登入以按讚" : undefined}
+            title={isGuest ? "請登入以按讚" : isLiking ? "處理中..." : undefined}
           >
             <svg 
               className={`w-5 h-5 ${post.is_liked && !isGuest ? "fill-current" : ""}`} 
@@ -342,7 +365,7 @@ export default function SocialPostCard({
                               </button>
                             )}
                             <button
-                              onClick={() => handleDeleteComment(comment.id)}
+                              onClick={() => openDeleteConfirm(comment.id)}
                               className="text-gray-500 hover:text-red-400 transition-colors p-1"
                               title={t("delete")}
                             >
@@ -435,6 +458,16 @@ export default function SocialPostCard({
             </div>
           )}
         </div>
+      )}
+
+      {isDeleteConfirmOpen && (
+        <DeleteConfirmModal
+          isOpen={isDeleteConfirmOpen}
+          onClose={() => setIsDeleteConfirmOpen(false)}
+          onConfirm={() => handleDeleteComment(deletingCommentId || "")}
+          deleteType="comment"
+          isDeleting={isDeleting}
+        />
       )}
     </article>
   );

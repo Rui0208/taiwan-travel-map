@@ -200,3 +200,41 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 } 
+
+// 刪除通知
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { notificationIds } = await request.json();
+    const userId = session.user.id;
+
+    if (!notificationIds || !Array.isArray(notificationIds)) {
+      return NextResponse.json({ error: "Invalid notification IDs" }, { status: 400 });
+    }
+
+    // 刪除指定的通知（確保只能刪除自己的通知）
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", userId)
+      .in("id", notificationIds);
+
+    if (error) {
+      console.error("刪除通知失敗:", error);
+      return NextResponse.json({ error: "Failed to delete notifications" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Notifications deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("刪除通知 API 錯誤:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+} 

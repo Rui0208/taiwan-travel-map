@@ -91,9 +91,39 @@ export default function UserPostsPage() {
     }
   };
 
+
+
   // 處理留言
   const handleComment = async (postId: string, content: string) => {
     try {
+      // 樂觀更新留言列表
+      const newComment = {
+        id: `temp-${Date.now()}`, // 臨時 ID
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: session?.user?.email || '',
+        post_id: postId,
+        user: {
+          id: session?.user?.email || '',
+          name: session?.user?.name || session?.user?.email?.split('@')[0] || '用戶',
+          image: session?.user?.image || undefined
+        },
+        likes_count: 0,
+        is_liked: false
+      };
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...(post.comments || []), newComment]
+              }
+            : post
+        )
+      );
+
       const response = await fetch(endpoints.comments.create, {
         method: "POST",
         headers: {
@@ -105,12 +135,14 @@ export default function UserPostsPage() {
         }),
       });
 
-      if (response.ok) {
-        // 重新獲取貼文資料以包含正確的使用者資訊
-        fetchUserPosts();
+      if (!response.ok) {
+        // 如果失敗，重新獲取資料
+        await fetchUserPosts();
       }
     } catch (error) {
       console.error("留言失敗:", error);
+      // 如果失敗，重新獲取資料
+      await fetchUserPosts();
     }
   };
 
@@ -162,6 +194,18 @@ export default function UserPostsPage() {
   // 處理留言編輯
   const handleCommentEdit = async (commentId: string, newContent: string) => {
     try {
+      // 樂觀更新留言內容
+      setPosts(prevPosts =>
+        prevPosts.map(post => ({
+          ...post,
+          comments: post.comments?.map(comment =>
+            comment.id === commentId
+              ? { ...comment, content: newContent }
+              : comment
+          )
+        }))
+      );
+
       const response = await fetch(endpoints.comments.update(commentId), {
         method: "PUT",
         headers: {
@@ -170,28 +214,40 @@ export default function UserPostsPage() {
         body: JSON.stringify({ content: newContent }),
       });
 
-      if (response.ok) {
-        // 重新獲取貼文資料以包含正確的使用者資訊
-        fetchUserPosts();
+      if (!response.ok) {
+        // 如果失敗，重新獲取資料
+        await fetchUserPosts();
       }
     } catch (error) {
       console.error("編輯留言失敗:", error);
+      // 如果失敗，重新獲取資料
+      await fetchUserPosts();
     }
   };
 
   // 處理留言刪除
   const handleCommentDelete = async (commentId: string) => {
     try {
+      // 樂觀更新留言列表
+      setPosts(prevPosts =>
+        prevPosts.map(post => ({
+          ...post,
+          comments: post.comments?.filter(comment => comment.id !== commentId)
+        }))
+      );
+
       const response = await fetch(endpoints.comments.delete(commentId), {
         method: "DELETE",
       });
 
-      if (response.ok) {
-        // 重新獲取貼文資料以包含正確的使用者資訊
-        fetchUserPosts();
+      if (!response.ok) {
+        // 如果失敗，重新獲取資料
+        await fetchUserPosts();
       }
     } catch (error) {
       console.error("刪除留言失敗:", error);
+      // 如果失敗，重新獲取資料
+      await fetchUserPosts();
     }
   };
 
@@ -346,8 +402,8 @@ export default function UserPostsPage() {
                   onLike={handleLike}
                   onComment={handleComment}
                   onCommentLike={handleCommentLike}
-                  onCommentEdit={handleCommentEdit}
-                  onCommentDelete={handleCommentDelete}
+                  onCommentEdit={(commentId, newContent) => handleCommentEdit(commentId, newContent)}
+                  onCommentDelete={(commentId) => handleCommentDelete(commentId)}
                   onEdit={handleEdit}
                 />
               ))}
