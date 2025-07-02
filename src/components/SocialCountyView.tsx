@@ -177,10 +177,10 @@ export default function SocialCountyView({
       // onRefresh();
     } catch (error) {
       console.error("按讚操作失敗:", error);
-      alert(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
-      
       // 發生錯誤時重新獲取資料
       await mutatePosts();
+      // 可以在這裡添加錯誤提示，但不使用 alert
+      console.error(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     }
   };
 
@@ -246,6 +246,10 @@ export default function SocialCountyView({
 
         if (!response.ok) {
           const error = await response.json();
+          // 如果是 409，代表已經按過讚，不用報錯
+          if (response.status === 409) {
+            return;
+          }
           throw new Error(error.error || "取消按讚失敗");
         }
       } else {
@@ -258,6 +262,10 @@ export default function SocialCountyView({
 
         if (!response.ok) {
           const error = await response.json();
+          // 如果是 409，代表已經按過讚，不用報錯
+          if (response.status === 409) {
+            return;
+          }
           throw new Error(error.error || "按讚失敗");
         }
       }
@@ -268,7 +276,8 @@ export default function SocialCountyView({
       // onRefresh();
     } catch (error) {
       console.error("留言按讚操作失敗:", error);
-      alert(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
+      // 可以在這裡添加錯誤提示，但不使用 alert
+      console.error(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     }
   };
 

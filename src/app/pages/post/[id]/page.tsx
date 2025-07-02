@@ -81,9 +81,18 @@ export default function PostPage() {
       if (response.ok) {
         // 重新獲取資料
         await mutate();
+      } else {
+        // 處理錯誤情況
+        const errorData = await response.json();
+        console.error("按讚操作失敗:", errorData);
+        // 如果是 409 錯誤（已經按過讚），可以忽略
+        if (response.status !== 409) {
+          throw new Error(errorData.error || "按讚操作失敗");
+        }
       }
     } catch (error) {
       console.error("按讚操作失敗:", error);
+      // 可以在這裡添加錯誤提示
     }
   };
 
@@ -143,9 +152,18 @@ export default function PostPage() {
       if (response.ok) {
         // 重新獲取資料
         await mutate();
+      } else {
+        // 處理錯誤情況
+        const errorData = await response.json();
+        console.error("留言按讚失敗:", errorData);
+        // 如果是 409 錯誤（已經按過讚），可以忽略
+        if (response.status !== 409) {
+          throw new Error(errorData.error || "留言按讚失敗");
+        }
       }
     } catch (error) {
       console.error("留言按讚失敗:", error);
+      // 可以在這裡添加錯誤提示
     }
   };
 

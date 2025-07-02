@@ -124,26 +124,33 @@ export default function SearchPage() {
         body: method === "POST" ? JSON.stringify({ post_id: postId }) : undefined,
       });
 
-      if (!response.ok) {
-        throw new Error("操作失敗");
+      if (response.ok) {
+        // 更新本地狀態
+        setSearchResults(prevResults => 
+          prevResults.map(post => 
+            post.id === postId 
+              ? { 
+                  ...post, 
+                  is_liked: !post.is_liked,
+                  likes_count: post.is_liked 
+                    ? (post.likes_count || 1) - 1 
+                    : (post.likes_count || 0) + 1
+                }
+              : post
+          )
+        );
+      } else {
+        // 處理錯誤情況
+        const errorData = await response.json();
+        console.error("按讚操作失敗:", errorData);
+        // 如果是 409 錯誤（已經按過讚），可以忽略
+        if (response.status !== 409) {
+          throw new Error(errorData.error || "按讚操作失敗");
+        }
       }
-
-      // 更新本地狀態
-      setSearchResults(prevResults => 
-        prevResults.map(post => 
-          post.id === postId 
-            ? { 
-                ...post, 
-                is_liked: !post.is_liked,
-                likes_count: post.is_liked 
-                  ? (post.likes_count || 1) - 1 
-                  : (post.likes_count || 0) + 1
-              }
-            : post
-        )
-      );
     } catch (error) {
       console.error("按讚操作失敗:", error);
+      // 可以在這裡添加錯誤提示
     }
   };
 
@@ -190,16 +197,23 @@ export default function SearchPage() {
         body: method === "POST" ? JSON.stringify({ comment_id: commentId }) : undefined,
       });
 
-      if (!response.ok) {
-        throw new Error("操作失敗");
-      }
-
-      // 重新搜尋以更新資料
-      if (searchQuery.trim()) {
-        performSearch(searchQuery);
+      if (response.ok) {
+        // 重新搜尋以更新資料
+        if (searchQuery.trim()) {
+          performSearch(searchQuery);
+        }
+      } else {
+        // 處理錯誤情況
+        const errorData = await response.json();
+        console.error("留言按讚操作失敗:", errorData);
+        // 如果是 409 錯誤（已經按過讚），可以忽略
+        if (response.status !== 409) {
+          throw new Error(errorData.error || "留言按讚操作失敗");
+        }
       }
     } catch (error) {
       console.error("留言按讚操作失敗:", error);
+      // 可以在這裡添加錯誤提示
     }
   };
 

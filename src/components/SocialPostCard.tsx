@@ -81,15 +81,19 @@ export default function SocialPostCard({
 
   // 處理按讚
   const handleLike = async () => {
-    if (isLiking) return; // 防止重複點擊
+    if (isLiking || isGuest) return; // 防止重複點擊和訪客操作
     
     setIsLiking(true);
     try {
       await onLike(post.id);
     } catch (error) {
       console.error("按讚失敗:", error);
+      // 可以在這裡添加錯誤提示
     } finally {
-      setIsLiking(false);
+      // 延遲重置狀態，防止快速重複點擊
+      setTimeout(() => {
+        setIsLiking(false);
+      }, 500);
     }
   };
 

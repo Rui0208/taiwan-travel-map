@@ -23,20 +23,36 @@ export async function createNotification(
     }
 
     // 檢查是否已存在相同的通知（避免重複）
-    // 檢查最近 1 小時內是否有相同的通知
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // 檢查最近 24 小時內是否有相同的通知，並且更嚴格的條件
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    console.log("檢查重複通知:", { targetUserId, actorId, type, postId, commentId, oneHourAgo });
+    console.log("檢查重複通知:", { targetUserId, actorId, type, postId, commentId, oneDayAgo });
     
-    const { data: existingNotifications, error: checkError } = await supabase
+    // 更嚴格的重複檢查：檢查完全相同的通知
+    let query = supabase
       .from("notifications")
       .select("id, created_at")
       .eq("user_id", targetUserId)
       .eq("actor_id", actorId)
       .eq("type", type)
-      .eq("post_id", postId || null)
-      .eq("comment_id", commentId || null)
-      .gte("created_at", oneHourAgo);
+      .gte("created_at", oneDayAgo);
+
+    // 正確處理 null 值查詢
+    if (postId) {
+      query = query.eq("post_id", postId);
+    } else {
+      query = query.is("post_id", null);
+    }
+
+    if (commentId) {
+      query = query.eq("comment_id", commentId);
+    } else {
+      query = query.is("comment_id", null);
+    }
+
+    const { data: existingNotifications, error: checkError } = await query
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     if (checkError) {
       console.error("檢查重複通知時發生錯誤:", checkError);
