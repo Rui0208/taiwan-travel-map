@@ -2,9 +2,8 @@
 
 ## 🎯 專案概述
 
-一個全端社交旅遊地圖應用程式，整合地圖視覺化、社交互動、多媒體管理等功能。採用現代化技術棧，實作完整的用戶認證、即時互動、多語言支援等企業級功能。
+一個全端社交旅遊地圖應用程式，整合地圖視覺化、社交互動、多媒體管理等功能。實作完整的用戶認證、即時互動、多語言支援等功能。
 
-**專案規模**: 15,000+ 行程式碼 | **技術棧**: 8+ 核心技術 | **功能模組**: 12+ 主要功能
 
 ## 🏗️ 技術架構總覽
 
@@ -56,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 });
 ```
 
-**技術亮點**:
+**技術**:
 - 整合 Google OAuth 與 Supabase Auth
 - 統一用戶 ID 管理策略
 - 自動用戶檔案同步機制
@@ -431,8 +430,8 @@ export async function GET(request: Request) {
   
   // 縣市名稱對應表
   const countyMapping = {
-    'taipei': '台北市', 'kaohsiung': '高雄市',
-    'taichung': '台中市', 'tainan': '台南市'
+    'taipei': '台北', 'kaohsiung': '高雄',
+    'taichung': '台中', 'tainan': '台南'
     // ... 其他縣市
   };
   
@@ -517,7 +516,7 @@ CREATE TABLE notifications (
 );
 ```
 
-**技術亮點**:
+**技術**:
 - Row Level Security (RLS) 權限控制
 - 外鍵約束確保資料完整性
 - 自動時間戳記管理
@@ -654,7 +653,6 @@ export function usePerformanceMonitor() {
 const handleApiError = (error: unknown) => {
   if (error instanceof Error) {
     console.error('API Error:', error.message);
-    // 發送到錯誤監控服務
   }
 };
 ```
@@ -733,7 +731,7 @@ jobs:
    git checkout -b feature/new-feature
    # 開發功能
    git add .
-   git commit -m "feat: 新增功能"
+   git commit -m ""
    git push origin feature/new-feature
    ```
 
@@ -746,7 +744,6 @@ jobs:
    - 合併到 main 分支後自動部署到 Vercel
    - 部署完成後可立即訪問生產環境
 
-### 品質保證
 
 - **程式碼品質**：ESLint + TypeScript 檢查
 - **建置測試**：每次提交都會測試建置是否成功
@@ -759,17 +756,16 @@ jobs:
 - **組件數量**: 20+ React 組件
 - **API 端點**: 15+ RESTful API
 - **資料表**: 6 個核心資料表
-- **測試覆蓋率**: 80%+ (計劃中)
 
-## 🎯 技術亮點總結
+## 🎯 技術總結
 
 1. **全端 TypeScript**: 類型安全的完整開發體驗
-2. **現代化認證**: 雙重認證系統整合
 3. **即時互動**: WebSocket 即時通知系統
 4. **多媒體管理**: 完整的圖片上傳與編輯功能
 5. **國際化支援**: 動態多語言切換
 6. **響應式設計**: 跨平台一致的使用者體驗
 7. **效能優化**: 多層級的快取與優化策略
-8. **安全性**: 企業級的資料保護機制
+8. **安全性**: 資料保護機制
 
 ---
+
