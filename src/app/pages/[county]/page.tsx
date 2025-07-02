@@ -232,11 +232,7 @@ export default function CountyPage() {
     await mutate();
   };
 
-  // 處理社交互動的更新（留言、按讚等）
-  const handleSocialUpdate = async () => {
-    // 重新驗證資料，但不重新載入整個頁面
-    await mutate();
-  };
+
 
   if (status === "loading" || !mounted) {
     return (
@@ -258,7 +254,6 @@ export default function CountyPage() {
         onClose={handleCloseCard}
         onEdit={handleEdit}
         onAdd={handleAdd}
-        onRefresh={handleSocialUpdate}
         currentUserId={session?.user?.id}
         isGuest={status === "unauthenticated"}
         onGuestInteraction={handleGuestInteraction}
