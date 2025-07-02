@@ -9,7 +9,7 @@ on:
 
 # 環境變數
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   # 程式碼品質檢查和建置
